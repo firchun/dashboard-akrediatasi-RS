@@ -18,6 +18,11 @@ class Pokja extends Model
         return $this->hasMany(Regulasi::class);
     }
 
+    public function standars()
+    {
+        return $this->hasMany(Standar::class);
+    }
+
     public function epItems()
     {
         return $this->hasMany(EpItem::class);

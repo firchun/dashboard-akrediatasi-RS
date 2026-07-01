@@ -163,12 +163,14 @@ class PokjaSeeder extends Seeder
             $pokja = Pokja::where('code', $code)->first();
             if (!$pokja) continue;
             foreach ($items as $item) {
-                Regulasi::create([
+                $status = $item[2];
+                $data = [
                     'pokja_id' => $pokja->id,
                     'nama' => $item[0],
                     'jenis' => $item[1],
-                    'status' => $item[2],
-                ]);
+                    'is_verified' => false,
+                ];
+                Regulasi::create($data);
             }
         }
     }

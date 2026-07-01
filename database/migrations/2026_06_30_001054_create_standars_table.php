@@ -8,21 +8,17 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('regulasis', function (Blueprint $table) {
+        Schema::create('standars', function (Blueprint $table) {
             $table->id();
             $table->foreignId('pokja_id')->constrained()->cascadeOnDelete();
-            $table->string('nama');
-            $table->string('jenis');
-            $table->string('pic')->nullable();
-            $table->text('link')->nullable();
-            $table->text('keterangan')->nullable();
-            $table->boolean('is_verified')->default(false);
+            $table->string('kode');
+            $table->text('uraian')->nullable();
             $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('regulasis');
+        Schema::dropIfExists('standars');
     }
 };

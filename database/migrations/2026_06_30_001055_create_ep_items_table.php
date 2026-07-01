@@ -11,7 +11,8 @@ return new class extends Migration
         Schema::create('ep_items', function (Blueprint $table) {
             $table->id();
             $table->foreignId('pokja_id')->constrained()->cascadeOnDelete();
-            $table->string('kode')->nullable();
+            $table->foreignId('standar_id')->constrained()->cascadeOnDelete();
+            $table->string('no_urut')->nullable();
             $table->text('uraian')->nullable();
             $table->boolean('bukti_r')->default(false);
             $table->boolean('bukti_d')->default(false);
@@ -19,6 +20,9 @@ return new class extends Migration
             $table->boolean('bukti_w')->default(false);
             $table->boolean('bukti_s')->default(false);
             $table->string('nilai')->default('');
+            $table->text('fakta_analisis')->nullable();
+            $table->text('rekomendasi')->nullable();
+            $table->text('pengingat')->nullable();
             $table->string('pic')->nullable();
             $table->text('link')->nullable();
             $table->text('keterangan')->nullable();

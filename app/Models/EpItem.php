@@ -8,7 +8,8 @@ class EpItem extends Model
 {
     protected $fillable = [
         'pokja_id',
-        'kode',
+        'standar_id',
+        'no_urut',
         'uraian',
         'bukti_r',
         'bukti_d',
@@ -16,6 +17,9 @@ class EpItem extends Model
         'bukti_w',
         'bukti_s',
         'nilai',
+        'fakta_analisis',
+        'rekomendasi',
+        'pengingat',
         'pic',
         'link',
         'keterangan',
@@ -27,10 +31,16 @@ class EpItem extends Model
         'bukti_o' => 'boolean',
         'bukti_w' => 'boolean',
         'bukti_s' => 'boolean',
+        'history' => 'array',
     ];
 
     public function pokja()
     {
         return $this->belongsTo(Pokja::class);
+    }
+
+    public function standar()
+    {
+        return $this->belongsTo(Standar::class);
     }
 }

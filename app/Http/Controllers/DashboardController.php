@@ -19,6 +19,7 @@ class DashboardController extends Controller
 
     private function globalStats($pokjas)
     {
+        $setting = Setting::first();
         $stats = ['Belum' => 0, 'Proses' => 0, 'Review' => 0, 'Selesai' => 0, 'overdue' => 0, 'total' => 0];
         $today = now()->format('Y-m-d');
 
@@ -26,7 +27,7 @@ class DashboardController extends Controller
             foreach ($pokja->regulasis as $reg) {
                 $stats[$reg->status]++;
                 $stats['total']++;
-                if ($reg->status !== 'Selesai' && $reg->target && $reg->target->format('Y-m-d') < $today) {
+                if ($reg->status !== 'Selesai' && $setting && $setting->target_date && $setting->target_date->format('Y-m-d') < $today) {
                     $stats['overdue']++;
                 }
             }
@@ -103,13 +104,14 @@ class DashboardController extends Controller
 
     public static function pokjaStats($pokja)
     {
+        $setting = Setting::first();
         $stats = ['Belum' => 0, 'Proses' => 0, 'Review' => 0, 'Selesai' => 0, 'overdue' => 0, 'total' => 0];
         $today = now()->format('Y-m-d');
 
         foreach ($pokja->regulasis as $reg) {
             $stats[$reg->status]++;
             $stats['total']++;
-            if ($reg->status !== 'Selesai' && $reg->target && $reg->target->format('Y-m-d') < $today) {
+            if ($reg->status !== 'Selesai' && $setting && $setting->target_date && $setting->target_date->format('Y-m-d') < $today) {
                 $stats['overdue']++;
             }
         }

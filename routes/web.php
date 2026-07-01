@@ -32,7 +32,9 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/regulasi/{id}', [RegulasiController::class, 'destroy'])->name('regulasi.destroy');
     Route::post('/upload-document', [RegulasiController::class, 'upload'])->name('document.upload');
 
-    // EP Items
+    // EP Items & Penilaian
+    Route::get('/pokja/{code}/penilaian-ep', [EpItemController::class, 'penilaian'])->name('ep.penilaian')->middleware('pokja.access');
+    Route::post('/pokja/{code}/standar', [EpItemController::class, 'storeStandar'])->name('standar.store')->middleware('pokja.access');
     Route::get('/pokja/{code}/ep', [EpItemController::class, 'index'])->name('ep.index')->middleware('pokja.access');
     Route::post('/pokja/{code}/ep', [EpItemController::class, 'store'])->name('ep.store')->middleware('pokja.access');
     Route::put('/ep/{id}', [EpItemController::class, 'update'])->name('ep.update');

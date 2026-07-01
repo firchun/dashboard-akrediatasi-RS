@@ -11,18 +11,35 @@ class Regulasi extends Model
         'nama',
         'jenis',
         'pic',
-        'target',
         'link',
         'keterangan',
-        'status',
+        'is_verified',
     ];
 
     protected $casts = [
-        'target' => 'date',
+        'is_verified' => 'boolean',
+        'history' => 'array',
     ];
+
+    protected $appends = ['status'];
 
     public function pokja()
     {
         return $this->belongsTo(Pokja::class);
+    }
+
+    public function getStatusAttribute()
+    {
+        $isComplete = !empty($this->pic) && !empty($this->link);
+        
+        if (!$isComplete) {
+            return 'Belum';
+        }
+        
+        if ($this->is_verified) {
+            return 'Selesai';
+        }
+        
+        return 'Proses';
     }
 }

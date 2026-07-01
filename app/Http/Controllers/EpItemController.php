@@ -16,13 +16,46 @@ class EpItemController extends Controller
         return response()->json($items);
     }
 
+    public function penilaian($code)
+    {
+        $user = auth()->user();
+
+        if (!$user->isAdmin()) {
+            if (!$user->pokja || $user->pokja->code !== $code) {
+                abort(403);
+            }
+        }
+
+        $pokja = Pokja::where('code', $code)
+            ->with(['standars.epItems', 'epItems'])
+            ->firstOrFail();
+
+        $setting = \App\Models\Setting::first();
+
+        return view('ep.penilaian', compact('pokja', 'setting'));
+    }
+
+    public function storeStandar(Request $request, $code)
+    {
+        $pokja = Pokja::where('code', $code)->firstOrFail();
+
+        $standar = \App\Models\Standar::create([
+            'pokja_id' => $pokja->id,
+            'kode' => $request->kode,
+            'uraian' => $request->uraian,
+        ]);
+
+        return response()->json($standar);
+    }
+
     public function store(Request $request, $code)
     {
         $pokja = Pokja::where('code', $code)->firstOrFail();
 
         $item = EpItem::create([
             'pokja_id' => $pokja->id,
-            'kode' => $request->kode ?? '',
+            'standar_id' => $request->standar_id,
+            'no_urut' => $request->no_urut ?? '',
             'uraian' => $request->uraian ?? '',
             'bukti_r' => $request->boolean('bukti_r'),
             'bukti_d' => $request->boolean('bukti_d'),
@@ -30,12 +63,15 @@ class EpItemController extends Controller
             'bukti_w' => $request->boolean('bukti_w'),
             'bukti_s' => $request->boolean('bukti_s'),
             'nilai' => $request->nilai ?? '',
+            'fakta_analisis' => $request->fakta_analisis ?? '',
+            'rekomendasi' => $request->rekomendasi ?? '',
+            'pengingat' => $request->pengingat ?? '',
             'pic' => $request->pic ?? '',
             'link' => $request->link ?? '',
             'keterangan' => $request->keterangan ?? '',
         ]);
 
-        return response()->json($item->load('pokja'));
+        return response()->json($item->load('pokja', 'standar'));
     }
 
     public function update(Request $request, $id)
@@ -43,7 +79,8 @@ class EpItemController extends Controller
         $item = EpItem::findOrFail($id);
 
         $item->update([
-            'kode' => $request->kode ?? $item->kode,
+            'standar_id' => $request->standar_id ?? $item->standar_id,
+            'no_urut' => $request->no_urut ?? $item->no_urut,
             'uraian' => $request->uraian ?? $item->uraian,
             'bukti_r' => $request->has('bukti_r') ? $request->boolean('bukti_r') : $item->bukti_r,
             'bukti_d' => $request->has('bukti_d') ? $request->boolean('bukti_d') : $item->bukti_d,
@@ -51,6 +88,9 @@ class EpItemController extends Controller
             'bukti_w' => $request->has('bukti_w') ? $request->boolean('bukti_w') : $item->bukti_w,
             'bukti_s' => $request->has('bukti_s') ? $request->boolean('bukti_s') : $item->bukti_s,
             'nilai' => $request->nilai ?? $item->nilai,
+            'fakta_analisis' => $request->fakta_analisis ?? $item->fakta_analisis,
+            'rekomendasi' => $request->rekomendasi ?? $item->rekomendasi,
+            'pengingat' => $request->pengingat ?? $item->pengingat,
             'pic' => $request->pic ?? $item->pic,
             'link' => $request->link ?? $item->link,
             'keterangan' => $request->keterangan ?? $item->keterangan,
@@ -78,44 +118,62 @@ class EpItemController extends Controller
 
         if ($request->boolean('replace')) {
             EpItem::where('pokja_id', $pokja->id)->delete();
+            \App\Models\Standar::where('pokja_id', $pokja->id)->delete();
         }
 
         $lines = explode("\n", $request->lines);
         $imported = 0;
+        $currentStandar = null;
 
         foreach ($lines as $line) {
-            $line = trim($line);
-            if (empty($line)) continue;
+            $line = rtrim($line, "\r\n");
+            if (empty(trim($line))) continue;
 
             $cols = str_contains($line, "\t") ? explode("\t", $line) : explode(";", $line);
-            $kode = trim($cols[0] ?? '');
-            $uraian = trim($cols[1] ?? '');
-            $buktiStr = trim($cols[2] ?? '');
-            $nilai = strtoupper(trim($cols[3] ?? ''));
+            
+            $colStandar = trim($cols[0] ?? '');
+            $colNoUrut = trim($cols[1] ?? '');
+            $colUraian = trim($cols[2] ?? '');
+            $colR = trim($cols[3] ?? '');
+            $colD = trim($cols[4] ?? '');
+            $colO = trim($cols[5] ?? '');
+            $colW = trim($cols[6] ?? '');
+            $colS = trim($cols[7] ?? '');
+            $colNilai = strtoupper(trim($cols[8] ?? ''));
+            $colFakta = trim($cols[9] ?? '');
+            $colRekom = trim($cols[10] ?? '');
+            $colPengingat = trim($cols[11] ?? '');
 
-            if (empty($kode) && empty($uraian)) continue;
-
-            $bukti = [];
-            foreach (str_split($buktiStr) as $ch) {
-                if (in_array($ch, ['R', 'D', 'O', 'W', 'S'])) $bukti[] = $ch;
+            if (!empty($colStandar)) {
+                $currentStandar = \App\Models\Standar::create([
+                    'pokja_id' => $pokja->id,
+                    'kode' => $colStandar,
+                    'uraian' => $colUraian,
+                ]);
+                continue;
             }
 
-            EpItem::create([
-                'pokja_id' => $pokja->id,
-                'kode' => $kode,
-                'uraian' => $uraian,
-                'bukti_r' => in_array('R', $bukti),
-                'bukti_d' => in_array('D', $bukti),
-                'bukti_o' => in_array('O', $bukti),
-                'bukti_w' => in_array('W', $bukti),
-                'bukti_s' => in_array('S', $bukti),
-                'nilai' => in_array($nilai, ['', 'TL', 'TS', 'TT', 'TDD']) ? $nilai : '',
-                'pic' => '',
-                'link' => '',
-                'keterangan' => '',
-            ]);
-
-            $imported++;
+            if (!empty($colNoUrut) && $currentStandar) {
+                EpItem::create([
+                    'pokja_id' => $pokja->id,
+                    'standar_id' => $currentStandar->id,
+                    'no_urut' => $colNoUrut,
+                    'uraian' => $colUraian,
+                    'bukti_r' => !empty($colR),
+                    'bukti_d' => !empty($colD),
+                    'bukti_o' => !empty($colO),
+                    'bukti_w' => !empty($colW),
+                    'bukti_s' => !empty($colS),
+                    'nilai' => in_array($colNilai, ['TL', 'TS', 'TT', 'TDD']) ? $colNilai : '',
+                    'fakta_analisis' => $colFakta,
+                    'rekomendasi' => $colRekom,
+                    'pengingat' => $colPengingat,
+                    'pic' => '',
+                    'link' => '',
+                    'keterangan' => '',
+                ]);
+                $imported++;
+            }
         }
 
         return response()->json([

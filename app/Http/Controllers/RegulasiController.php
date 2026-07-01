@@ -13,9 +13,15 @@ class RegulasiController extends Controller
     {
         $pokja = Pokja::where('code', $code)->firstOrFail();
 
-        $status = $request->status ?? 'Belum';
+        $is_verified = $request->is_verified ? true : false;
         if (auth()->user()->role === 'user') {
-            $status = 'Belum';
+            $is_verified = false;
+        }
+
+        if ($is_verified) {
+            if (empty($request->pic) || empty($request->link)) {
+                return response()->json(['message' => 'Status Selesai membutuhkan dokumen dan PIC yang terisi.'], 400);
+            }
         }
 
         $reg = Regulasi::create([
@@ -23,10 +29,9 @@ class RegulasiController extends Controller
             'nama' => $request->nama ?? '',
             'jenis' => $request->jenis ?? 'Panduan',
             'pic' => $request->pic ?? '',
-            'target' => $request->target,
             'link' => $request->link ?? '',
             'keterangan' => $request->keterangan ?? '',
-            'status' => $status,
+            'is_verified' => $is_verified,
         ]);
 
         return response()->json($reg->load('pokja'));
@@ -37,11 +42,24 @@ class RegulasiController extends Controller
         $reg = Regulasi::findOrFail($id);
 
         $data = $request->only([
-            'nama', 'jenis', 'pic', 'target', 'link', 'keterangan', 'status'
+            'nama', 'jenis', 'pic', 'link', 'keterangan'
         ]);
 
-        if (auth()->user()->role === 'user') {
-            unset($data['status']);
+        if (auth()->user()->role === 'verifikator' || auth()->user()->isAdmin()) {
+            if ($request->has('is_verified')) {
+                $checkVerified = $request->is_verified ? true : false;
+                
+                if ($checkVerified) {
+                    $checkPic = $data['pic'] ?? $reg->pic;
+                    $checkLink = $data['link'] ?? $reg->link;
+
+                    if (empty($checkPic) || empty($checkLink)) {
+                        return response()->json(['message' => 'Status Selesai (Verifikasi) membutuhkan dokumen dan PIC yang terisi.'], 400);
+                    }
+                }
+                
+                $data['is_verified'] = $checkVerified;
+            }
         }
 
         $reg->update($data);
@@ -54,25 +72,49 @@ class RegulasiController extends Controller
         $request->validate([
             'id' => 'required|integer',
             'type' => 'required|in:regulasi,ep',
-            'file' => 'required|file|max:20480', // limit to 20MB
+            'file' => 'required|file|max:20480|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,jpg,jpeg,png,webp,zip,rar', // limit to 20MB
+        ], [
+            'file.mimes' => 'Format file tidak valid. Hanya gambar (jpg/png) dan dokumen (pdf/doc/xls/dll) yang diperbolehkan.'
         ]);
 
+        if ($request->type === 'regulasi') {
+            $item = Regulasi::with('pokja')->findOrFail($request->id);
+            if ($item->is_verified) {
+                return response()->json(['message' => 'Dokumen sudah terverifikasi dan tidak dapat diubah.'], 403);
+            }
+        } else {
+            $item = \App\Models\EpItem::with('pokja')->findOrFail($request->id);
+        }
+
         $file = $request->file('file');
-        $fileName = time() . '_' . preg_replace('/[^a-zA-Z0-9_.-]/', '_', $file->getClientOriginalName());
+        $history = $item->history ?? [];
+        $newVersion = count($history) + 1;
+        
+        $baseName = \Illuminate\Support\Str::slug($item->nama ?? $item->kode ?? 'doc');
+        $pokjaCode = $item->pokja->code ?? 'UMUM';
+        $fileName = $baseName . '_' . $pokjaCode . '_v' . $newVersion . '_' . date('dmYHis') . '.' . $file->getClientOriginalExtension();
+        
         $path = $file->storeAs('uploads', $fileName, 'public');
         $url = asset('storage/' . $path);
 
-        if ($request->type === 'regulasi') {
-            $item = Regulasi::findOrFail($request->id);
-        } else {
-            $item = \App\Models\EpItem::findOrFail($request->id);
-        }
+        $history[] = [
+            'version' => $newVersion,
+            'url' => $url,
+            'filename' => $fileName,
+            'uploaded_at' => now()->toDateTimeString(),
+            'uploaded_by' => auth()->user()->name ?? 'System'
+        ];
 
-        $item->update(['link' => $url]);
+        $item->update([
+            'link' => $url,
+            'history' => $history
+        ]);
 
         return response()->json([
             'success' => true,
-            'url' => $url
+            'url' => $url,
+            'status' => $item->status ?? null,
+            'history' => $history
         ]);
     }
 
