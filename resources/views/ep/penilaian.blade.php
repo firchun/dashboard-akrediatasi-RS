@@ -348,7 +348,7 @@ document.addEventListener('alpine:init', () => {
     async submitStandar() {
       this.savingStd = true;
       try {
-        const res = await fetch(`/pokja/${this.code}/standar`, {
+        const res = await fetch(`${window.baseUrl}/pokja/${this.code}/standar`, {
           method: 'POST',
           credentials: 'same-origin',
           headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': window.csrfToken },
@@ -379,7 +379,7 @@ document.addEventListener('alpine:init', () => {
     async submitEp() {
       this.savingEp = true;
       try {
-        const url = this.epModalMode === 'add' ? `/pokja/${this.code}/ep` : `/ep/${this.epForm.id}`;
+        const url = this.epModalMode === 'add' ? `${window.baseUrl}/pokja/${this.code}/ep` : `${window.baseUrl}/ep/${this.epForm.id}`;
         const method = this.epModalMode === 'add' ? 'POST' : 'PUT';
         
         const res = await fetch(url, {
@@ -403,7 +403,7 @@ document.addEventListener('alpine:init', () => {
 
     async deleteEpItem(id, index) {
       if(!confirm('Hapus EP ini?')) return;
-      const res = await fetch(`/ep/${id}`, { 
+      const res = await fetch(`${window.baseUrl}/ep/${id}`, { 
         method: 'DELETE', 
         credentials: 'same-origin',
         headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': window.csrfToken }
@@ -421,7 +421,7 @@ document.addEventListener('alpine:init', () => {
       if(!this.epImpText.trim()) { alert('Isi daftar EP terlebih dahulu.'); return; }
       this.importing = true;
       try {
-        const res = await fetch(`/pokja/${this.code}/ep/import`, {
+        const res = await fetch(`${window.baseUrl}/pokja/${this.code}/ep/import`, {
           method: 'POST',
           credentials: 'same-origin',
           headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': window.csrfToken },
@@ -458,7 +458,7 @@ document.addEventListener('alpine:init', () => {
       formData.append('file', fileInput.files[0]);
 
       try {
-        const res = await fetch('/upload-document', { 
+        const res = await fetch(`${window.baseUrl}/upload-document`, { 
           method: 'POST', 
           credentials: 'same-origin',
           headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },

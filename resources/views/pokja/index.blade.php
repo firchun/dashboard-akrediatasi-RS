@@ -583,7 +583,7 @@
             formData.append('file', fileInput.files[0]);
 
             try {
-              const res = await fetch('/upload-document', { method: 'POST', body: formData });
+              const res = await fetch(`${window.baseUrl}/upload-document`, { method: 'POST', body: formData });
               const data = await res.json();
               if (data.success) {
                 this.$dispatch('upload-success', { type: this.uploadType, id: this.uploadId, url: data.url, status: data.status, history: data.history });
@@ -610,7 +610,7 @@
           async submitRegulasi() {
             this.savingReg = true;
             try {
-              const url = this.regModalMode === 'add' ? `/pokja/${this.regForm.pokja_code}/regulasi` : `/regulasi/${this.regForm.id}`;
+              const url = this.regModalMode === 'add' ? `${window.baseUrl}/pokja/${this.regForm.pokja_code}/regulasi` : `${window.baseUrl}/regulasi/${this.regForm.id}`;
               const method = this.regModalMode === 'add' ? 'POST' : 'PUT';
 
               const res = await fetch(url, {
@@ -651,7 +651,7 @@
           async submitEp() {
             this.savingEp = true;
             try {
-              const url = this.epModalMode === 'add' ? `/pokja/${this.epForm.pokja_code}/ep` : `/ep/${this.epForm.id}`;
+              const url = this.epModalMode === 'add' ? `${window.baseUrl}/pokja/${this.epForm.pokja_code}/ep` : `${window.baseUrl}/ep/${this.epForm.id}`;
               const method = this.epModalMode === 'add' ? 'POST' : 'PUT';
 
               const res = await fetch(url, {
@@ -688,13 +688,13 @@
             if (!this.epImpText.trim()) { alert('Isi daftar EP terlebih dahulu.'); return; }
             this.importing = true;
             try {
-              const res = await fetch(`/pokja/${this.epImpCode}/ep/import`, {
+              const res = await fetch(`${window.baseUrl}/pokja/${this.epImpCode}/ep/import`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': window.csrfToken },
                 body: JSON.stringify({ lines: this.epImpText, replace: this.epImpReplace })
               });
               if (res.ok) {
-                const epRes = await fetch(`/pokja/${this.epImpCode}/ep`);
+                const epRes = await fetch(`${window.baseUrl}/pokja/${this.epImpCode}/ep`);
                 const eps = await epRes.json();
                 this.$dispatch('eps-reloaded', { code: this.epImpCode, data: eps });
                 this.epImpModal = false;
@@ -756,7 +756,7 @@
                 if (ep) {
                   ep.link = e.detail.url;
                   ep.history = e.detail.history;
-                  fetch(`/ep/${ep.id}`, {
+                  fetch(`${window.baseUrl}/ep/${ep.id}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': window.csrfToken },
                     body: JSON.stringify(ep)
@@ -848,7 +848,7 @@
 
           saveRegLink(reg, url) {
             reg.link = url;
-            fetch(`/regulasi/${reg.id}`, {
+            fetch(`${window.baseUrl}/regulasi/${reg.id}`, {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': window.csrfToken },
               body: JSON.stringify(reg)
@@ -857,7 +857,7 @@
 
           async deleteRegulasi(id, index) {
             if (!confirm('Hapus regulasi ini?')) return;
-            const res = await fetch(`/regulasi/${id}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': window.csrfToken } });
+            const res = await fetch(`${window.baseUrl}/regulasi/${id}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': window.csrfToken } });
             if (res.ok) {
               this.regulasis.splice(index, 1);
               window.dispatchEvent(new Event('recalc-totals'));
@@ -874,7 +874,7 @@
 
           async deleteEpItem(id, index) {
             if (!confirm('Hapus EP ini?')) return;
-            const res = await fetch(`/ep/${id}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': window.csrfToken } });
+            const res = await fetch(`${window.baseUrl}/ep/${id}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': window.csrfToken } });
             if (res.ok) this.epItems.splice(index, 1);
           }
         }));

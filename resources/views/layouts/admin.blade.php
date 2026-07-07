@@ -48,6 +48,7 @@
 @yield('content')
 
 <script>
+window.baseUrl = '{{ url('/') }}';
 function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function todayISO(){ return new Date().toISOString().slice(0,10); }
 function normalizeUrl(u){ u=String(u||'').trim(); if(!u) return ''; return /^https?:\/\//i.test(u)?u:'https://'+u; }
