@@ -90,9 +90,18 @@ class RegulasiController extends Controller
         $history = $item->history ?? [];
         $newVersion = count($history) + 1;
         
-        $baseName = \Illuminate\Support\Str::slug($item->nama ?? $item->kode ?? 'doc');
         $pokjaCode = $item->pokja->code ?? 'UMUM';
-        $fileName = $baseName . '_' . $pokjaCode . '_v' . $newVersion . '_' . date('dmYHis') . '.' . $file->getClientOriginalExtension();
+        $type = $request->type; // 'regulasi' or 'ep'
+
+        if ($type === 'ep') {
+            $standardCode = $item->standar->kode ?? 'std';
+            $noUrut = $item->no_urut ?? '1';
+            $baseName = \Illuminate\Support\Str::slug($standardCode . '-ep-' . $noUrut);
+        } else {
+            $baseName = \Illuminate\Support\Str::slug($item->nama ?? 'doc');
+        }
+
+        $fileName = $pokjaCode . '_' . $type . '_' . $baseName . '_v' . $newVersion . '_' . date('dmYHis') . '.' . $file->getClientOriginalExtension();
         
         $path = $file->storeAs('uploads', $fileName, 'public');
         $url = asset('storage/' . $path);
