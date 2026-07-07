@@ -112,4 +112,33 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
         return redirect('/');
     }
+
+    public function updateProfile(Request $request)
+    {
+        $user = auth()->user();
+
+        $rules = [];
+
+        if ($request->filled('password')) {
+            $rules['password'] = 'required|string|min:6|confirmed';
+        }
+
+        if ($request->has('pokja_id')) {
+            $rules['pokja_id'] = 'nullable|exists:pokjas,id';
+        }
+
+        $request->validate($rules);
+
+        if ($request->filled('password')) {
+            $user->password = Hash::make($request->password);
+        }
+
+        if ($request->has('pokja_id')) {
+            $user->pokja_id = $request->pokja_id ?: null;
+        }
+
+        $user->save();
+
+        return response()->json(['success' => true, 'message' => 'Profil berhasil diperbarui.']);
+    }
 }

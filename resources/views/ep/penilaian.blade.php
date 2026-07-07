@@ -30,6 +30,15 @@
         </div>
       </div>
     </div>
+    <div class="mt-4 pt-3 border-t border-line-soft grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5 text-[11px] text-slate-500">
+      <div><span class="inline-block w-[38px] text-center font-bold text-[10px] px-1.5 py-0.5 rounded n-TL mr-1">TL</span> <b class="text-slate-700">Terpenuhi Lengkap</b> — Skor 10. Tercapai ≥80%.</div>
+      <div><span class="inline-block w-[38px] text-center font-bold text-[10px] px-1.5 py-0.5 rounded n-TS mr-1">TS</span> <b class="text-slate-700">Terpenuhi Sebagian</b> — Skor 5. Tercapai 20–79%.</div>
+      <div><span class="inline-block w-[38px] text-center font-bold text-[10px] px-1.5 py-0.5 rounded n-TT mr-1">TT</span> <b class="text-slate-700">Tidak Terpenuhi</b> — Skor 0. Tercapai &lt;20%.</div>
+      <div><span class="inline-block w-[38px] text-center font-bold text-[10px] px-1.5 py-0.5 rounded n-TDD mr-1">TDD</span> <b class="text-slate-700">Tidak Dapat Dibuktikan</b> — Dikecualikan dari skor.</div>
+    </div>
+    <div class="mt-2 text-[11px] text-slate-400">
+      Rumus: <code>(TL×10 + TS×5) ÷ (EP berlaku ×10) × 100%</code>
+    </div>
   </div>
 
   <div class="board p-5 mb-5 shadow-custom bg-card border border-line rounded-[14px] mt-6">
@@ -124,9 +133,7 @@
       </table>
     </div>
     <div class="bukti-legend mt-4 text-[11px] text-slate-500 p-3 bg-slate-50 rounded-lg border border-line-soft">
-      <b>R</b> Regulasi · <b>D</b> Dokumen bukti · <b>O</b> Observasi · <b>W</b> Wawancara · <b>S</b> Simulasi &nbsp;|&nbsp; 
-      <b>TL</b>=10 · <b>TS</b>=5 · <b>TT</b>=0 · <b>TDD</b> dikecualikan &nbsp;|&nbsp; 
-      Skor = <code>(TL×10 + TS×5) ÷ (EP berlaku ×10)</code>
+      <b>R</b> Regulasi · <b>D</b> Dokumen bukti · <b>O</b> Observasi · <b>W</b> Wawancara · <b>S</b> Simulasi
     </div>
   </div>
 

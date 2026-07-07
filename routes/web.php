@@ -25,6 +25,7 @@ Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 Route::middleware(['auth'])->group(function () {
     Route::get('/pokja', [PokjaController::class, 'index'])->name('pokja.index');
     Route::get('/pokja/{code}', [PokjaController::class, 'show'])->name('pokja.show')->middleware('pokja.access');
+    Route::put('/profile', [AuthController::class, 'updateProfile'])->name('profile.update');
 
     // Regulasi CRUD
     Route::post('/pokja/{code}/regulasi', [RegulasiController::class, 'store'])->name('regulasi.store')->middleware('pokja.access');

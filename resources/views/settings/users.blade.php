@@ -189,7 +189,7 @@
       document.getElementById('editEmail').value = email;
       document.getElementById('editPokja').value = pokjaId || '';
       document.getElementById('editRole').value = role;
-      document.getElementById('editUserForm').action = '/settings/users/' + id;
+      document.getElementById('editUserForm').action = window.baseUrl + '/settings/users/' + id;
       document.getElementById('editUserModal').classList.add('show');
     }
 

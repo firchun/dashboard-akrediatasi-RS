@@ -11,7 +11,7 @@
 @vite(['resources/css/app.css'])
 @stack('styles')
 </head>
-<body>
+<body x-data="{ profileModal: false, profileSaving: false, profileMsg: '' }">
 
 <nav class="sticky top-0 z-50 bg-ink text-[#eaf4f5]">
   <div class="mx-auto max-w-[1240px] px-5 flex items-center gap-2 min-h-[52px]">
@@ -30,7 +30,7 @@
         @if(auth()->user()->avatar)
         <img class="w-[30px] h-[30px] rounded-full object-cover" src="{{ auth()->user()->avatar }}" alt="" />
         @endif
-        <span class="text-xs text-[#bfe0e4] hidden sm:inline">{{ auth()->user()->name }}</span>
+        <button type="button" @click="profileModal = true; profileMsg = ''" class="text-xs text-[#bfe0e4] hidden sm:inline hover:text-white cursor-pointer underline decoration-dotted underline-offset-2 transition">{{ auth()->user()->name }}</button>
         <span class="text-[10px] font-bold px-1.5 py-0.5 rounded text-white uppercase {{ auth()->user()->role === 'it' ? 'bg-[#2363a6]' : (auth()->user()->role === 'ketua_tim' ? 'bg-[#bd770d]' : (auth()->user()->role === 'verifikator' ? 'bg-[#7a5bbd]' : 'bg-[#647b85]')) }}">
           {{ str_replace('_', ' ', auth()->user()->role) }}
         </span>
@@ -44,6 +44,65 @@
     </div>
   </div>
 </nav>
+
+@auth
+<!-- Profile Modal -->
+<div class="modal-bg" :class="profileModal ? 'show' : ''" @click.self="profileModal = false" style="z-index:100">
+  <div class="modal max-w-[440px]">
+    <div class="modal-h">
+      <div>
+        <h3>Profil Saya</h3>
+        <p>{{ auth()->user()->name }} · {{ auth()->user()->email }}</p>
+      </div>
+      <button type="button" class="modal-close" @click="profileModal = false">×</button>
+    </div>
+    <form @submit.prevent="
+      profileSaving = true; profileMsg = '';
+      fetch(window.baseUrl + '/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+        body: JSON.stringify({
+          pokja_id: $refs.profPokja.value || null,
+          password: $refs.profPass.value || '',
+          password_confirmation: $refs.profPassC.value || ''
+        })
+      }).then(r => r.json()).then(d => {
+        if (d.success) { profileMsg = '✓ ' + d.message; $refs.profPass.value = ''; $refs.profPassC.value = ''; }
+        else { profileMsg = '✗ ' + (d.message || JSON.stringify(d.errors || 'Gagal')); }
+      }).catch(() => { profileMsg = '✗ Terjadi kesalahan jaringan.'; })
+      .finally(() => { profileSaving = false; })
+    ">
+      <div class="modal-b flex flex-col gap-4 px-5 py-4">
+        <div>
+          <label class="block text-[11px] font-bold text-slate-400 mb-1">Pokja</label>
+          <select x-ref="profPokja" class="w-full px-3 py-2 border border-line rounded-lg text-[13px] bg-white focus:outline-none focus:border-teal focus:ring-2 focus:ring-teal/12">
+            <option value="">— Tidak ada —</option>
+            @foreach(\App\Models\Pokja::orderBy('group')->orderBy('code')->get() as $p)
+              <option value="{{ $p->id }}" {{ auth()->user()->pokja_id == $p->id ? 'selected' : '' }}>{{ $p->code }} — {{ $p->name }}</option>
+            @endforeach
+          </select>
+        </div>
+
+        <div class="border-t border-line-soft pt-3">
+          <label class="block text-[11px] font-bold text-slate-400 mb-1">Password Baru <span class="font-normal">(kosongkan jika tidak ingin mengubah)</span></label>
+          <input type="password" x-ref="profPass" placeholder="Minimal 6 karakter" autocomplete="new-password" class="w-full px-3 py-2 border border-line rounded-lg text-[13px] bg-white focus:outline-none focus:border-teal focus:ring-2 focus:ring-teal/12" />
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-bold text-slate-400 mb-1">Konfirmasi Password</label>
+          <input type="password" x-ref="profPassC" placeholder="Ulangi password baru" autocomplete="new-password" class="w-full px-3 py-2 border border-line rounded-lg text-[13px] bg-white focus:outline-none focus:border-teal focus:ring-2 focus:ring-teal/12" />
+        </div>
+
+        <div x-show="profileMsg" x-text="profileMsg" class="text-xs font-bold px-3 py-2 rounded-lg" :class="profileMsg.startsWith('✓') ? 'bg-teal-50 text-teal-700' : 'bg-red-50 text-red-600'"></div>
+      </div>
+      <div class="modal-f">
+        <button type="button" class="btn ghost" @click="profileModal = false">Tutup</button>
+        <button type="submit" class="btn primary" :disabled="profileSaving" x-text="profileSaving ? 'Menyimpan...' : 'Simpan'"></button>
+      </div>
+    </form>
+  </div>
+</div>
+@endauth
 
 @yield('content')
 
