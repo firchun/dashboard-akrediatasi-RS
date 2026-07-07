@@ -35,6 +35,8 @@ Route::middleware(['auth'])->group(function () {
     // EP Items & Penilaian
     Route::get('/pokja/{code}/penilaian-ep', [EpItemController::class, 'penilaian'])->name('ep.penilaian')->middleware('pokja.access');
     Route::post('/pokja/{code}/standar', [EpItemController::class, 'storeStandar'])->name('standar.store')->middleware('pokja.access');
+    Route::delete('/standar/{id}', [EpItemController::class, 'destroyStandar'])->name('standar.destroy');
+    Route::get('/pokja/{code}/data-ep', [EpItemController::class, 'getDataEp'])->name('ep.data')->middleware('pokja.access');
     Route::get('/pokja/{code}/ep', [EpItemController::class, 'index'])->name('ep.index')->middleware('pokja.access');
     Route::post('/pokja/{code}/ep', [EpItemController::class, 'store'])->name('ep.store')->middleware('pokja.access');
     Route::put('/ep/{id}', [EpItemController::class, 'update'])->name('ep.update');

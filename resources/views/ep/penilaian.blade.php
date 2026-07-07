@@ -75,7 +75,10 @@
             <tr class="bg-slate-100 border-t-2 border-slate-300">
               <td class="ep-kode py-2 align-top"><span class="font-mono font-bold text-xs text-ink" x-text="std.kode || '-'"></span></td>
               <td></td>
-              <td colspan="13" class="ep-ur py-2"><span class="text-xs font-bold text-slate-700 whitespace-pre-wrap leading-relaxed" x-text="std.uraian || '-'"></span></td>
+              <td colspan="12" class="ep-ur py-2"><span class="text-xs font-bold text-slate-700 whitespace-pre-wrap leading-relaxed" x-text="std.uraian || '-'"></span></td>
+              <td class="text-right py-2 pr-2">
+                <button class="row-del" @click="deleteStandar(std.id)" title="Hapus Standar">×</button>
+              </td>
             </tr>
             <!-- EP Items for this standar -->
             <template x-for="(ep, index) in std.ep_items" :key="ep.id">
@@ -294,6 +297,21 @@ document.addEventListener('alpine:init', () => {
     standars: standarsData,
     epItems: epItemsData,
 
+    async reloadData() {
+      try {
+        const res = await fetch(`${window.baseUrl}/pokja/${this.code}/data-ep`, {
+          headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          this.standars = data.standars;
+          this.epItems = data.epItems;
+        }
+      } catch (e) {
+        console.error("Gagal reload data:", e);
+      }
+    },
+
     stdModal: false,
     stdForm: { kode: '', uraian: '' },
     savingStd: false,
@@ -355,7 +373,8 @@ document.addEventListener('alpine:init', () => {
           body: JSON.stringify(this.stdForm)
         });
         if (res.ok) {
-          window.location.reload();
+          this.stdModal = false;
+          await this.reloadData();
         } else {
           const err = await res.text();
           alert('Gagal menyimpan standar: ' + res.status + ' ' + (err.substring(0, 100)));
@@ -390,7 +409,8 @@ document.addEventListener('alpine:init', () => {
         });
         
         if (res.ok) {
-          window.location.reload(); // Simple reload to refresh the nested list cleanly
+          this.epModal = false;
+          await this.reloadData();
         } else {
           const err = await res.text();
           alert('Gagal menyimpan EP: ' + res.status + ' ' + (err.substring(0, 100)));
@@ -408,7 +428,21 @@ document.addEventListener('alpine:init', () => {
         credentials: 'same-origin',
         headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': window.csrfToken }
       });
-      if (res.ok) window.location.reload();
+      if (res.ok) await this.reloadData();
+    },
+
+    async deleteStandar(id) {
+      if(!confirm('Hapus standar ini beserta seluruh elemen penilaian (EP) di dalamnya?')) return;
+      const res = await fetch(`${window.baseUrl}/standar/${id}`, { 
+        method: 'DELETE', 
+        credentials: 'same-origin',
+        headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': window.csrfToken }
+      });
+      if (res.ok) {
+        await this.reloadData();
+      } else {
+        alert('Gagal menghapus standar.');
+      }
     },
 
     openEpImportModal() {
@@ -428,7 +462,8 @@ document.addEventListener('alpine:init', () => {
           body: JSON.stringify({ lines: this.epImpText, replace: this.epImpReplace })
         });
         if (res.ok) {
-          window.location.reload();
+          this.epImpModal = false;
+          await this.reloadData();
         } else {
           alert('Gagal mengimpor EP.');
         }
@@ -466,7 +501,8 @@ document.addEventListener('alpine:init', () => {
         });
         const data = await res.json();
         if (data.success) {
-          window.location.reload();
+          this.uploadModal = false;
+          await this.reloadData();
         } else {
           alert('Upload gagal: ' + (data.message || 'Error'));
         }

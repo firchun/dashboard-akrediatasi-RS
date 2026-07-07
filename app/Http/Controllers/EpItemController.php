@@ -32,7 +32,11 @@ class EpItemController extends Controller
 
         $setting = \App\Models\Setting::first();
 
-        return view('ep.penilaian', compact('pokja', 'setting'));
+        return response()
+            ->view('ep.penilaian', compact('pokja', 'setting'))
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', 'Sat, 26 Jul 1997 05:00:00 GMT');
     }
 
     public function storeStandar(Request $request, $code)
@@ -46,6 +50,26 @@ class EpItemController extends Controller
         ]);
 
         return response()->json($standar);
+    }
+
+    public function destroyStandar($id)
+    {
+        $standar = \App\Models\Standar::findOrFail($id);
+        $standar->delete();
+
+        return response()->json(['success' => true]);
+    }
+
+    public function getDataEp($code)
+    {
+        $pokja = Pokja::where('code', $code)
+            ->with(['standars.epItems', 'epItems'])
+            ->firstOrFail();
+
+        return response()->json([
+            'standars' => $pokja->standars,
+            'epItems' => $pokja->epItems,
+        ]);
     }
 
     public function store(Request $request, $code)
