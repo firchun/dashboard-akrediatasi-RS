@@ -64,8 +64,8 @@
             <option value="user" {{ old('role') === 'user' ? 'selected' : '' }}>User (Anggota Pokja)</option>
             <option value="ketua_tim" {{ old('role') === 'ketua_tim' ? 'selected' : '' }}>Ketua Tim</option>
             <option value="it" {{ old('role') === 'it' ? 'selected' : '' }}>IT</option>
-            <option value="verifikator" {{ old('role') === 'verifikator' ? 'selected' : '' }}>Verifikator (Verifikasi
-              Status)</option>
+            <option value="verifikator" {{ old('role') === 'verifikator' ? 'selected' : '' }}>Verifikator (Verifikasi Status)</option>
+            <option value="regulasi" {{ old('role') === 'regulasi' ? 'selected' : '' }}>Regulasi</option>
           </select>
         </div>
 

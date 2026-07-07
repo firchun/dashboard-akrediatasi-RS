@@ -22,7 +22,7 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'pokja_id' => 'nullable|exists:pokjas,id',
-            'role' => 'required|in:user,ketua_tim,it,verifikator',
+            'role' => 'required|in:user,ketua_tim,it,verifikator,regulasi',
         ]);
 
         User::create($request->only(['name', 'email', 'pokja_id', 'role']));
@@ -38,7 +38,7 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $id,
             'pokja_id' => 'nullable|exists:pokjas,id',
-            'role' => 'required|in:user,ketua_tim,it,verifikator',
+            'role' => 'required|in:user,ketua_tim,it,verifikator,regulasi',
         ]);
 
         $user->update($request->only(['name', 'email', 'pokja_id', 'role']));

@@ -44,7 +44,7 @@ class AuthController extends Controller
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:8|confirmed',
             'pokja_id' => 'required|exists:pokjas,id',
-            'role' => 'required|in:user,ketua_tim,it,verifikator',
+            'role' => 'required|in:user,ketua_tim,it,verifikator,regulasi',
         ]);
 
         $user = User::create([

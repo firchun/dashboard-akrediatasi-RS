@@ -62,6 +62,7 @@
                 <option value="ketua_tim">Ketua Tim</option>
                 <option value="it">IT</option>
                 <option value="verifikator">Verifikator</option>
+                <option value="regulasi">Regulasi</option>
               </select>
             </div>
           </div>
@@ -98,7 +99,7 @@
               <td><span class="text-xs text-slate-600">{{ $u->email }}</span></td>
               <td>
                 <span
-                  class="text-[10px] font-bold px-2 py-0.5 rounded text-white uppercase {{ $u->role === 'it' ? 'bg-[#2363a6]' : ($u->role === 'ketua_tim' ? 'bg-[#bd770d]' : ($u->role === 'verifikator' ? 'bg-[#7a5bbd]' : 'bg-[#647b85]')) }}">
+                  class="text-[10px] font-bold px-2 py-0.5 rounded text-white uppercase {{ $u->role === 'it' ? 'bg-[#2363a6]' : ($u->role === 'ketua_tim' ? 'bg-[#bd770d]' : ($u->role === 'verifikator' ? 'bg-[#7a5bbd]' : ($u->role === 'regulasi' ? 'bg-[#0d9488]' : 'bg-[#647b85]'))) }}">
                   {{ str_replace('_', ' ', $u->role) }}
                 </span>
               </td>
@@ -165,6 +166,7 @@
                   <option value="ketua_tim">Ketua Tim</option>
                   <option value="it">IT</option>
                   <option value="verifikator">Verifikator</option>
+                  <option value="regulasi">Regulasi</option>
                 </select>
               </div>
             </div>

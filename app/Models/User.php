@@ -45,7 +45,17 @@ class User extends Authenticatable
         return $this->role === 'verifikator';
     }
 
+    public function isRegulasi()
+    {
+        return $this->role === 'regulasi';
+    }
+
     public function isAdmin()
+    {
+        return in_array($this->role, ['it', 'ketua_tim', 'regulasi']);
+    }
+
+    public function hasSettingsAccess()
     {
         return in_array($this->role, ['it', 'ketua_tim']);
     }

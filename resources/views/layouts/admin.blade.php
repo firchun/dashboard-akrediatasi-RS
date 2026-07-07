@@ -20,7 +20,7 @@
       <a href="{{ route('dashboard') }}" class="px-3.5 py-2 rounded-lg text-xs font-semibold text-[#aacdd5] hover:bg-white/8 hover:text-white transition duration-150 {{ request()->routeIs('dashboard') ? 'bg-teal/25 text-white' : '' }}">Dashboard</a>
       @auth
       <a href="{{ route('pokja.index') }}" class="px-3.5 py-2 rounded-lg text-xs font-semibold text-[#aacdd5] hover:bg-white/8 hover:text-white transition duration-150 {{ request()->routeIs('pokja.*') ? 'bg-teal/25 text-white' : '' }}">Pokja</a>
-        @if(auth()->user()->isAdmin())
+        @if(auth()->user()->hasSettingsAccess())
         <a href="{{ route('settings.index') }}" class="px-3.5 py-2 rounded-lg text-xs font-semibold text-[#aacdd5] hover:bg-white/8 hover:text-white transition duration-150 {{ request()->routeIs('settings.*') ? 'bg-teal/25 text-white' : '' }}">Settings</a>
         @endif
       @endauth
@@ -31,7 +31,7 @@
         <img class="w-[30px] h-[30px] rounded-full object-cover" src="{{ auth()->user()->avatar }}" alt="" />
         @endif
         <button type="button" @click="profileModal = true; profileMsg = ''" class="text-xs text-[#bfe0e4] hidden sm:inline hover:text-white cursor-pointer underline decoration-dotted underline-offset-2 transition">{{ auth()->user()->name }}</button>
-        <span class="text-[10px] font-bold px-1.5 py-0.5 rounded text-white uppercase {{ auth()->user()->role === 'it' ? 'bg-[#2363a6]' : (auth()->user()->role === 'ketua_tim' ? 'bg-[#bd770d]' : (auth()->user()->role === 'verifikator' ? 'bg-[#7a5bbd]' : 'bg-[#647b85]')) }}">
+        <span class="text-[10px] font-bold px-1.5 py-0.5 rounded text-white uppercase {{ auth()->user()->role === 'it' ? 'bg-[#2363a6]' : (auth()->user()->role === 'ketua_tim' ? 'bg-[#bd770d]' : (auth()->user()->role === 'verifikator' ? 'bg-[#7a5bbd]' : (auth()->user()->role === 'regulasi' ? 'bg-[#0d9488]' : 'bg-[#647b85]'))) }}">
           {{ str_replace('_', ' ', auth()->user()->role) }}
         </span>
         <form method="POST" action="{{ route('logout') }}" class="inline">
