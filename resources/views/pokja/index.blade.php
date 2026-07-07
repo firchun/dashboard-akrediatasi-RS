@@ -136,7 +136,7 @@
                       x-text="`TDD ${epCounts.tdd}`"></span>
                   </div>
                   <p class="text-sm text-slate-500 mb-4">Pengelolaan tabel dan penilaian EP berada di halaman terpisah.</p>
-                  <a :href="`/pokja/${code}/penilaian-ep`"
+                  <a href="{{ route('ep.penilaian', $pokja->code) }}"
                     class="inline-flex items-center justify-center h-[34px] px-4 rounded-[10px] text-[13px] font-bold transition bg-teal text-white hover:bg-teal-deep">Buka
                     Halaman Penilaian EP →</a>
                 </div>
