@@ -72,9 +72,18 @@ class RegulasiController extends Controller
         $request->validate([
             'id' => 'required|integer',
             'type' => 'required|in:regulasi,ep',
-            'file' => 'required|file|max:20480|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,jpg,jpeg,png,webp,zip,rar', // limit to 20MB
-        ], [
-            'file.mimes' => 'Format file tidak valid. Hanya gambar (jpg/png) dan dokumen (pdf/doc/xls/dll) yang diperbolehkan.'
+            'file' => [
+                'required',
+                'file',
+                'max:20480',
+                function ($attribute, $value, $fail) {
+                    $ext = strtolower($value->getClientOriginalExtension());
+                    $allowed = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'jpg', 'jpeg', 'png', 'webp', 'zip', 'rar'];
+                    if (!in_array($ext, $allowed)) {
+                        $fail('Format file tidak valid. Hanya gambar (jpg/png) dan dokumen (pdf/doc/xls/dll) yang diperbolehkan.');
+                    }
+                }
+            ],
         ]);
 
         if ($request->type === 'regulasi') {
@@ -83,18 +92,18 @@ class RegulasiController extends Controller
                 return response()->json(['message' => 'Dokumen sudah terverifikasi dan tidak dapat diubah.'], 403);
             }
         } else {
-            $item = \App\Models\EpItem::with('pokja')->findOrFail($request->id);
+            $item = \App\Models\EpItem::with(['pokja', 'standar'])->findOrFail($request->id);
         }
 
         $file = $request->file('file');
         $history = $item->history ?? [];
         $newVersion = count($history) + 1;
         
-        $pokjaCode = $item->pokja->code ?? 'UMUM';
+        $pokjaCode = $item->pokja?->code ?? 'UMUM';
         $type = $request->type; // 'regulasi' or 'ep'
 
         if ($type === 'ep') {
-            $standardCode = $item->standar->kode ?? 'std';
+            $standardCode = $item->standar?->kode ?? 'std';
             $noUrut = $item->no_urut ?? '1';
             $baseName = \Illuminate\Support\Str::slug($standardCode . '-ep-' . $noUrut);
         } else {

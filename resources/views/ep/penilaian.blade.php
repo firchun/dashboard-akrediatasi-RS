@@ -110,7 +110,8 @@
                 
                 <td class="py-2"><span class="text-[10px] text-slate-500 font-medium whitespace-nowrap" x-text="ep.pic || '-'"></span></td>
                 <td class="py-2"><div class="doklink">
-                  <a class="dl-icon" :class="ep.link ? 'on' : 'cursor-not-allowed opacity-50'" :href="ep.link || null" :target="ep.link ? '_blank' : null" rel="noopener" :title="ep.link ? 'Buka dokumen' : 'Belum ada link'" @click="!ep.link && $event.preventDefault()">
+                  <a class="dl-icon" :class="ep.link ? 'on' : 'cursor-not-allowed opacity-50'" :href="ep.link || null" :target="ep.link ? '_blank' : null" rel="noopener" :title="ep.link ? 'Buka dokumen' : 'Belum ada link'" 
+                     @click.prevent="ep.link ? openPreview(ep.link, std.kode + ' EP ' + (ep.no_urut || '')) : null">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.5-1.5"/></svg>
                   </a>
                   <button type="button" class="btn-upload ml-1" @click="openUploadModal('ep', ep.id, ep.no_urut || ep.uraian)" title="Upload Dokumen">
@@ -293,9 +294,80 @@
       </form>
     </div>
   </div>
+
+  <!-- Document Preview Modal -->
+  <div class="modal-bg" 
+       :class="previewModal ? 'show' : ''" 
+       @click.self="closePreview" 
+       style="z-index: 150;">
+    <div class="modal max-w-[900px] w-full h-[90vh] flex flex-col" style="height: 90vh !important; display: flex; flex-direction: column;">
+      <div class="modal-h flex items-center justify-between border-b border-line px-4.5 py-3">
+        <div>
+          <h3 class="text-ink font-bold text-base" x-text="previewTitle">Pratinjau Dokumen</h3>
+          <p class="text-[11px] text-slate-400 mt-0.5" x-text="previewUrl" style="word-break: break-all;"></p>
+        </div>
+        <button type="button" class="modal-close text-2xl font-bold text-slate-400 hover:text-slate-600" @click="closePreview">×</button>
+      </div>
+      <div class="modal-b flex-1 overflow-auto bg-slate-50 p-4.5" style="flex: 1; overflow-y: auto; background-color: #f8fafc;">
+        <!-- Loading indicator -->
+        <div x-show="previewLoading" class="flex flex-col items-center justify-center py-24 text-slate-400">
+          <svg class="animate-spin h-8 w-8 text-teal mb-3" fill="none" viewBox="0 0 24 24" style="animation: spin 1s linear infinite; height: 32px; width: 32px; color: #0C7C8C;">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" style="opacity: 0.25;"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" style="opacity: 0.75;"></path>
+          </svg>
+          <span class="text-xs font-semibold">Mengunduh & menyiapkan dokumen...</span>
+        </div>
+
+        <!-- Preview views based on type -->
+        <div x-show="!previewLoading" class="h-full">
+          <!-- PDF container -->
+          <template x-if="previewType === 'pdf'">
+            <iframe :src="previewUrl" class="w-full h-full border-0 rounded-lg bg-white shadow-sm" style="width: 100%; height: 100%; min-height: 60vh;"></iframe>
+          </template>
+
+          <!-- Word Container -->
+          <div x-show="previewType === 'docx'" x-ref="previewDocxContainer" class="bg-white p-6 rounded-lg shadow-sm border border-line-soft overflow-auto" style="min-height: 100%;"></div>
+
+          <!-- Excel Container -->
+          <div x-show="previewType === 'xlsx'" x-ref="previewXlsxContainer" class="flex flex-col gap-6" style="min-height: 100%;"></div>
+
+          <!-- Image Container -->
+          <template x-if="previewType === 'image'">
+            <div class="flex items-center justify-center bg-white p-4 rounded-lg shadow-sm border border-line-soft">
+              <img :src="previewUrl" class="max-w-full max-h-[70vh] object-contain rounded" />
+            </div>
+          </template>
+
+          <!-- Unsupported / Fallback -->
+          <template x-if="previewType === 'unsupported'">
+            <div class="text-center py-20 bg-white p-8 rounded-lg shadow-sm border border-line-soft">
+              <svg class="mx-auto h-12 w-12 text-slate-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="48" height="48">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <h4 class="text-sm font-bold text-slate-700 mb-1">Pratinjau Tidak Didukung</h4>
+              <p class="text-xs text-slate-400 mb-4">Format berkas ini tidak dapat dipratinjau secara langsung.</p>
+              <a :href="previewUrl" target="_blank" class="btn primary inline-flex items-center gap-1.5 px-4 py-2 text-xs">
+                Buka di Tab Baru
+              </a>
+            </div>
+          </template>
+        </div>
+      </div>
+      <div class="modal-f flex items-center justify-end gap-2 border-t border-line px-4.5 py-3" style="display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
+        <a :href="previewUrl" target="_blank" download class="btn ghost text-xs flex items-center gap-1.5" style="display: inline-flex; align-items: center; gap: 6px;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Unduh File
+        </a>
+        <button type="button" class="btn primary text-xs" @click="closePreview">Tutup</button>
+      </div>
+    </div>
+  </div>
 </main>
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/docx-preview@0.1.15/dist/docx-preview.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
 document.addEventListener('alpine:init', () => {
   window.csrfToken = '{{ csrf_token() }}';
@@ -338,6 +410,12 @@ document.addEventListener('alpine:init', () => {
     uploadId: null,
     uploadTargetName: '',
     uploading: false,
+
+    previewModal: false,
+    previewUrl: '',
+    previewTitle: '',
+    previewType: '',
+    previewLoading: false,
 
     get epCounts() {
       let tl = 0, ts = 0, tt = 0, tdd = 0;
@@ -519,6 +597,83 @@ document.addEventListener('alpine:init', () => {
       this.uploading = false;
     },
 
+    async openPreview(url, title) {
+      this.previewUrl = url;
+      this.previewTitle = title || 'Pratinjau Dokumen';
+      this.previewModal = true;
+      this.previewLoading = true;
+      this.previewType = '';
+      
+      const ext = url.split('.').pop().toLowerCase().split('?')[0];
+      
+      if (['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp'].includes(ext)) {
+        this.previewType = 'image';
+        this.previewLoading = false;
+      } else if (ext === 'pdf') {
+        this.previewType = 'pdf';
+        this.previewLoading = false;
+      } else if (ext === 'docx') {
+        this.previewType = 'docx';
+        this.$nextTick(async () => {
+          try {
+            const response = await fetch(this.previewUrl);
+            if (!response.ok) throw new Error('Gagal mengunduh berkas Word.');
+            const arrayBuffer = await response.arrayBuffer();
+            const container = this.$refs.previewDocxContainer;
+            container.innerHTML = '';
+            await docx.renderAsync(arrayBuffer, container);
+          } catch (err) {
+            this.$refs.previewDocxContainer.innerHTML = `<div class="text-center py-12 text-red-500 font-semibold">Gagal memuat pratinjau Word: ${err.message}</div>`;
+          } finally {
+            this.previewLoading = false;
+          }
+        });
+      } else if (['xlsx', 'xls'].includes(ext)) {
+        this.previewType = 'xlsx';
+        this.$nextTick(async () => {
+          try {
+            const response = await fetch(this.previewUrl);
+            if (!response.ok) throw new Error('Gagal mengunduh berkas Excel.');
+            const arrayBuffer = await response.arrayBuffer();
+            const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+            
+            let htmlContent = '';
+            workbook.SheetNames.forEach((sheetName) => {
+              const worksheet = workbook.Sheets[sheetName];
+              const rawHtml = XLSX.utils.sheet_to_html(worksheet, { header: '', footer: '' });
+              
+              htmlContent += `
+                <div class="mb-6 bg-white p-4 rounded-lg shadow-sm border border-line-soft overflow-auto">
+                  <h4 class="text-xs font-bold text-teal mb-3 pb-1.5 border-b border-line flex items-center gap-1.5">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    Sheet: ${sheetName}
+                  </h4>
+                  <div class="excel-table-wrapper">${rawHtml}</div>
+                </div>
+              `;
+            });
+            this.$refs.previewXlsxContainer.innerHTML = htmlContent || '<div class="text-center py-12 text-slate-400">Lembar kerja kosong.</div>';
+          } catch (err) {
+            this.$refs.previewXlsxContainer.innerHTML = `<div class="text-center py-12 text-red-500 font-semibold">Gagal memuat pratinjau Excel: ${err.message}</div>`;
+          } finally {
+            this.previewLoading = false;
+          }
+        });
+      } else {
+        this.previewType = 'unsupported';
+        this.previewLoading = false;
+      }
+    },
+
+    closePreview() {
+      this.previewModal = false;
+      this.previewUrl = '';
+      this.previewTitle = '';
+      this.previewType = '';
+      if (this.$refs.previewDocxContainer) this.$refs.previewDocxContainer.innerHTML = '';
+      if (this.$refs.previewXlsxContainer) this.$refs.previewXlsxContainer.innerHTML = '';
+    },
+
     ringSVG(pct, size, stroke, color, bg) {
       const r = (size - stroke) / 2;
       const c = Math.PI * (r * 2);
@@ -532,5 +687,16 @@ document.addEventListener('alpine:init', () => {
   }));
 });
 </script>
+@endpush
+
+@push('styles')
+<style>
+.excel-table-wrapper { overflow-x: auto; max-width: 100%; }
+.excel-table-wrapper table { border-collapse: collapse; min-width: 100%; font-size: 11px; font-family: sans-serif; color: #1e293b; }
+.excel-table-wrapper th, .excel-table-wrapper td { border: 1px solid #e2e8f0; padding: 5px 9px; text-align: left; min-width: 60px; }
+.excel-table-wrapper tr:first-child { background-color: #f1f5f9; font-weight: 600; }
+.excel-table-wrapper tr:nth-child(even) { background-color: #f8fafc; }
+.excel-table-wrapper tr:hover { background-color: #f1f5f9; }
+</style>
 @endpush
 @endsection
