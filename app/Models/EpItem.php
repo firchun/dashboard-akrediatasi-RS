@@ -22,6 +22,7 @@ class EpItem extends Model
         'pengingat',
         'pic',
         'link',
+        'history',
         'keterangan',
     ];
 
@@ -42,5 +43,10 @@ class EpItem extends Model
     public function standar()
     {
         return $this->belongsTo(Standar::class);
+    }
+
+    public function uploadFiles()
+    {
+        return $this->hasMany(UploadFile::class, 'related_id')->where('jenis_upload', 'ep')->orderBy('id', 'asc');
     }
 }

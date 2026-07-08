@@ -164,18 +164,18 @@
                       <td class="py-2"><span class="text-xs text-slate-500 font-medium" x-text="reg.pic || '-'"></span></td>
                       <td class="py-2">
                         <span class="text-[11px] font-bold px-2 py-1 rounded-md" :class="{
-                                   'bg-st-selesaibg text-st-selesai': reg.status === 'Selesai',
-                                   'bg-st-prosesbg text-st-proses': reg.status === 'Proses',
-                                   'bg-st-reviewbg text-st-review': reg.status === 'Review',
-                                   'bg-st-belumbg text-st-belum': reg.status === 'Belum' || !reg.status
-                                }" x-text="reg.status || 'Belum'"></span>
+                                                       'bg-st-selesaibg text-st-selesai': reg.status === 'Selesai',
+                                                       'bg-st-prosesbg text-st-proses': reg.status === 'Proses',
+                                                       'bg-st-reviewbg text-st-review': reg.status === 'Review',
+                                                       'bg-st-belumbg text-st-belum': reg.status === 'Belum' || !reg.status
+                                                    }" x-text="reg.status || 'Belum'"></span>
                       </td>
                       <td class="col-dok py-2">
                         <div class="doklink">
-                          <a class="dl-icon" :class="reg.link ? 'on' : 'cursor-not-allowed opacity-50'"
-                            :href="reg.link || null" :target="reg.link ? '_blank' : null" rel="noopener"
-                            :title="reg.link ? 'Buka dokumen' : 'Belum ada link'"
-                            @click.prevent="reg.link ? openPreview(reg.link, reg.nama || 'Pratinjau Dokumen') : null">
+                          <a class="dl-icon" :class="(reg.link || (reg.upload_files && reg.upload_files.length > 0)) ? 'on' : 'cursor-not-allowed opacity-50'"
+                            :href="reg.link || null" :target="(reg.link || (reg.upload_files && reg.upload_files.length > 0)) ? '_blank' : null" rel="noopener"
+                            :title="(reg.link || (reg.upload_files && reg.upload_files.length > 0)) ? 'Buka dokumen' : 'Belum ada dokumen'"
+                            @click.prevent="(reg.link || (reg.upload_files && reg.upload_files.length > 0)) ? openPreview(reg, reg.nama || 'Pratinjau Dokumen') : null">
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                               stroke-width="2.2">
                               <path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.5 1.5" />
@@ -183,7 +183,7 @@
                             </svg>
                           </a>
                           <button x-show="!reg.is_verified" type="button" class="btn-upload ml-1"
-                            @click="openUploadModal('regulasi', reg.id, reg.nama || 'Tanpa Nama')" title="Upload Dokumen">
+                            @click="openUploadModal('regulasi', reg, reg.nama || 'Tanpa Nama')" title="Upload Dokumen">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                               stroke-width="2.2">
                               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -194,7 +194,7 @@
                           <template x-if="reg.history && reg.history.length > 1">
                             <div class="relative inline-block ml-1" x-data="{ openHist: false }"
                               @click.away="openHist = false">
-                              <button type="button" class="btn-upload" @click="openHist = !openHist" title="Riwayat Versi"
+                              <button type="button" class="btn-upload" @click="openHist = !openHist" title="Riwayat File"
                                 style="border-color:var(--color-teal); color:var(--color-teal); background:var(--color-teal-100)">
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                   stroke-width="2.5">
@@ -292,7 +292,33 @@
           <p class="text-xs text-slate-400 mt-1 break-all" x-text="uploadTargetName"></p>
         </div>
         <form @submit.prevent="submitUpload">
-          <div class="modal-b px-4.5 py-4">
+          <div class="modal-b px-4 py-4">
+            <!-- History List -->
+            <div class="mb-5" x-show="uploadHistory.length > 0">
+              <h4 class="text-xs font-bold text-slate-700 mb-2">Riwayat File:</h4>
+              <div class="flex flex-col gap-2 max-h-[200px] overflow-y-auto pr-1">
+                <template x-for="(h, i) in uploadHistory" :key="i">
+                  <div class="flex items-start justify-between bg-slate-50 p-2.5 rounded-lg border border-line-soft">
+                    <div class="overflow-hidden flex-1 mr-2">
+                      <a :href="h.url" target="_blank"
+                        class="text-teal font-medium text-xs truncate hover:underline block mb-0.5" x-text="h.filename"
+                        :title="h.filename"></a>
+                      <div class="text-[10px] text-slate-400 flex items-center gap-1.5">
+                        <span x-text="h.uploaded_at"></span>
+                        <span class="w-1 h-1 rounded-full bg-slate-300"></span>
+                        <span x-text="h.uploaded_by"></span>
+                      </div>
+                    </div>
+                    <button type="button" @click="deleteFile(h)" class="text-red-500 hover:text-red-700 p-1.5 rounded-md hover:bg-red-50 transition" title="Hapus File">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                    </button>
+                  </div>
+                </template>
+              </div>
+            </div>
+            <hr class="border-line mb-4" x-show="uploadHistory.length > 0" />
+
+            <h4 class="text-xs font-bold text-slate-700 mb-2">Tambah Dokumen Baru:</h4>
             <input type="file" x-ref="uploadFile" required
               class="w-full text-sm border border-line p-2 rounded-lg bg-slate-50 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-teal/10 file:text-teal hover:file:bg-teal/20" />
           </div>
@@ -405,23 +431,34 @@
                 class="w-full px-3 py-2 border border-line rounded-lg text-[13px] bg-white focus:outline-none focus:border-teal focus:ring-2 focus:ring-teal/12 resize-y leading-relaxed"></textarea>
             </div>
 
-            <div style="display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 12px !important;">
+            <div
+              style="display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 12px !important;">
               <div>
                 <label class="block text-[11px] font-bold text-slate-400 mb-1">Bukti (RDOWS)</label>
                 <div class="flex gap-1.5 flex-wrap mt-1.5">
-                  <label class="cursor-pointer inline-flex items-center justify-center w-7 h-7 rounded border font-mono text-xs font-bold transition duration-150 select-none bg-white text-slate-400 border-line" :class="epForm.bukti_r ? 'bg-[#2363a6] text-white border-transparent' : 'bg-white text-slate-400 border-line'">
+                  <label
+                    class="cursor-pointer inline-flex items-center justify-center w-7 h-7 rounded border font-mono text-xs font-bold transition duration-150 select-none bg-white text-slate-400 border-line"
+                    :class="epForm.bukti_r ? 'bg-[#2363a6] text-white border-transparent' : 'bg-white text-slate-400 border-line'">
                     <input type="checkbox" class="hidden" x-model="epForm.bukti_r">R
                   </label>
-                  <label class="cursor-pointer inline-flex items-center justify-center w-7 h-7 rounded border font-mono text-xs font-bold transition duration-150 select-none bg-white text-slate-400 border-line" :class="epForm.bukti_d ? 'bg-teal text-white border-transparent' : 'bg-white text-slate-400 border-line'">
+                  <label
+                    class="cursor-pointer inline-flex items-center justify-center w-7 h-7 rounded border font-mono text-xs font-bold transition duration-150 select-none bg-white text-slate-400 border-line"
+                    :class="epForm.bukti_d ? 'bg-teal text-white border-transparent' : 'bg-white text-slate-400 border-line'">
                     <input type="checkbox" class="hidden" x-model="epForm.bukti_d">D
                   </label>
-                  <label class="cursor-pointer inline-flex items-center justify-center w-7 h-7 rounded border font-mono text-xs font-bold transition duration-150 select-none bg-white text-slate-400 border-line" :class="epForm.bukti_o ? 'bg-st-proses text-white border-transparent' : 'bg-white text-slate-400 border-line'">
+                  <label
+                    class="cursor-pointer inline-flex items-center justify-center w-7 h-7 rounded border font-mono text-xs font-bold transition duration-150 select-none bg-white text-slate-400 border-line"
+                    :class="epForm.bukti_o ? 'bg-st-proses text-white border-transparent' : 'bg-white text-slate-400 border-line'">
                     <input type="checkbox" class="hidden" x-model="epForm.bukti_o">O
                   </label>
-                  <label class="cursor-pointer inline-flex items-center justify-center w-7 h-7 rounded border font-mono text-xs font-bold transition duration-150 select-none bg-white text-slate-400 border-line" :class="epForm.bukti_w ? 'bg-[#7a5bbd] text-white border-transparent' : 'bg-white text-slate-400 border-line'">
+                  <label
+                    class="cursor-pointer inline-flex items-center justify-center w-7 h-7 rounded border font-mono text-xs font-bold transition duration-150 select-none bg-white text-slate-400 border-line"
+                    :class="epForm.bukti_w ? 'bg-[#7a5bbd] text-white border-transparent' : 'bg-white text-slate-400 border-line'">
                     <input type="checkbox" class="hidden" x-model="epForm.bukti_w">W
                   </label>
-                  <label class="cursor-pointer inline-flex items-center justify-center w-7 h-7 rounded border font-mono text-xs font-bold transition duration-150 select-none bg-white text-slate-400 border-line" :class="epForm.bukti_s ? 'bg-st-selesai text-white border-transparent' : 'bg-white text-slate-400 border-line'">
+                  <label
+                    class="cursor-pointer inline-flex items-center justify-center w-7 h-7 rounded border font-mono text-xs font-bold transition duration-150 select-none bg-white text-slate-400 border-line"
+                    :class="epForm.bukti_s ? 'bg-st-selesai text-white border-transparent' : 'bg-white text-slate-400 border-line'">
                     <input type="checkbox" class="hidden" x-model="epForm.bukti_s">S
                   </label>
                 </div>
@@ -460,75 +497,111 @@
       </div>
     </div>
 
-  <!-- Document Preview Modal -->
-  <div class="modal-bg" 
-       :class="previewModal ? 'show' : ''" 
-       @click.self="closePreview" 
-       style="z-index: 150;">
-    <div class="modal max-w-[900px] w-full h-[90vh] flex flex-col" style="height: 90vh !important; display: flex; flex-direction: column;">
-      <div class="modal-h flex items-center justify-between border-b border-line px-4.5 py-3">
-        <div>
-          <h3 class="text-ink font-bold text-base" x-text="previewTitle">Pratinjau Dokumen</h3>
-          <p class="text-[11px] text-slate-400 mt-0.5" x-text="previewUrl" style="word-break: break-all;"></p>
-        </div>
-        <button type="button" class="modal-close text-2xl font-bold text-slate-400 hover:text-slate-600" @click="closePreview">×</button>
-      </div>
-      <div class="modal-b flex-1 overflow-auto bg-slate-50 p-4.5" style="flex: 1; overflow-y: auto; background-color: #f8fafc;">
-        <!-- Loading indicator -->
-        <div x-show="previewLoading" class="flex flex-col items-center justify-center py-24 text-slate-400">
-          <svg class="animate-spin h-8 w-8 text-teal mb-3" fill="none" viewBox="0 0 24 24" style="animation: spin 1s linear infinite; height: 32px; width: 32px; color: #0C7C8C;">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" style="opacity: 0.25;"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" style="opacity: 0.75;"></path>
-          </svg>
-          <span class="text-xs font-semibold">Mengunduh & menyiapkan dokumen...</span>
+    <!-- Document Preview Modal -->
+    <div class="modal-bg" :class="previewModal ? 'show' : ''" @click.self="closePreview" style="z-index: 150;">
+      <div class="modal max-w-[900px] w-full h-[90vh] flex flex-col"
+        style="height: 90vh !important; display: flex; flex-direction: column;">
+        <div class="modal-h flex items-center justify-between border-b border-line px-4.5 py-3">
+          <div>
+            <h3 class="text-ink font-bold text-base" x-text="previewTitle">Pratinjau Dokumen</h3>
+            <p class="text-[11px] text-slate-400 mt-0.5" x-text="previewUrl" style="word-break: break-all;"></p>
+          </div>
+          <button type="button" class="modal-close text-2xl font-bold text-slate-400 hover:text-slate-600"
+            @click="closePreview">×</button>
         </div>
 
-        <!-- Preview views based on type -->
-        <div x-show="!previewLoading" class="h-full">
-          <!-- PDF container -->
-          <template x-if="previewType === 'pdf'">
-            <iframe :src="previewUrl" class="w-full h-full border-0 rounded-lg bg-white shadow-sm" style="width: 100%; height: 100%; min-height: 60vh;"></iframe>
-          </template>
-
-          <!-- Word Container -->
-          <div x-show="previewType === 'docx'" x-ref="previewDocxContainer" class="bg-white p-6 rounded-lg shadow-sm border border-line-soft overflow-auto" style="min-height: 100%;"></div>
-
-          <!-- Excel Container -->
-          <div x-show="previewType === 'xlsx'" x-ref="previewXlsxContainer" class="flex flex-col gap-6" style="min-height: 100%;"></div>
-
-          <!-- Image Container -->
-          <template x-if="previewType === 'image'">
-            <div class="flex items-center justify-center bg-white p-4 rounded-lg shadow-sm border border-line-soft">
-              <img :src="previewUrl" class="max-w-full max-h-[70vh] object-contain rounded" />
-            </div>
-          </template>
-
-          <!-- Unsupported / Fallback -->
-          <template x-if="previewType === 'unsupported'">
-            <div class="text-center py-20 bg-white p-8 rounded-lg shadow-sm border border-line-soft">
-              <svg class="mx-auto h-12 w-12 text-slate-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="48" height="48">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        <!-- File Selector Header -->
+        <div
+          class="bg-white border-b border-line-soft px-4.5 py-3 overflow-x-auto whitespace-nowrap hide-scrollbar flex gap-2"
+          x-show="previewFiles.length > 1">
+          <template x-for="(f, i) in previewFiles" :key="i">
+            <button type="button" @click="changePreviewFile(f.url)"
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition"
+              :class="previewUrl === f.url ? 'bg-teal text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                class="opacity-75">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
               </svg>
-              <h4 class="text-sm font-bold text-slate-700 mb-1">Pratinjau Tidak Didukung</h4>
-              <p class="text-xs text-slate-400 mb-4">Format berkas ini tidak dapat dipratinjau secara langsung.</p>
-              <a :href="previewUrl" target="_blank" class="btn primary inline-flex items-center gap-1.5 px-4 py-2 text-xs">
-                Buka di Tab Baru
-              </a>
-            </div>
+              <span x-text="'File  ' + (previewFiles.length - i)"></span>
+            </button>
           </template>
         </div>
-      </div>
-      <div class="modal-f flex items-center justify-end gap-2 border-t border-line px-4.5 py-3" style="display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
-        <a :href="previewUrl" target="_blank" download class="btn ghost text-xs flex items-center gap-1.5" style="display: inline-flex; align-items: center; gap: 6px;">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Unduh File
-        </a>
-        <button type="button" class="btn primary text-xs" @click="closePreview">Tutup</button>
+
+        <div class="modal-b flex-1 overflow-auto bg-slate-50 p-4.5"
+          style="flex: 1; overflow-y: auto; background-color: #f8fafc;">
+          <!-- Loading indicator -->
+          <div x-show="previewLoading" class="flex flex-col items-center justify-center py-24 text-slate-400">
+            <svg class="animate-spin h-8 w-8 text-teal mb-3" fill="none" viewBox="0 0 24 24"
+              style="animation: spin 1s linear infinite; height: 32px; width: 32px; color: #0C7C8C;">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"
+                style="opacity: 0.25;"></circle>
+              <path class="opacity-75" fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                style="opacity: 0.75;"></path>
+            </svg>
+            <span class="text-xs font-semibold">Mengunduh & menyiapkan dokumen...</span>
+          </div>
+
+          <!-- Preview views based on type -->
+          <div x-show="!previewLoading" class="h-full">
+            <!-- PDF container -->
+            <template x-if="previewType === 'pdf'">
+              <iframe :src="previewUrl" class="w-full h-full border-0 rounded-lg bg-white shadow-sm"
+                style="width: 100%; height: 100%; min-height: 60vh;"></iframe>
+            </template>
+
+            <!-- Word Container -->
+            <div x-show="previewType === 'docx'" x-ref="previewDocxContainer"
+              class="bg-white p-6 rounded-lg shadow-sm border border-line-soft overflow-auto" style="min-height: 100%;">
+            </div>
+
+            <!-- Excel Container -->
+            <div x-show="previewType === 'xlsx'" x-ref="previewXlsxContainer" class="flex flex-col gap-6"
+              style="min-height: 100%;"></div>
+
+            <!-- Image Container -->
+            <template x-if="previewType === 'image'">
+              <div class="flex items-center justify-center bg-white p-4 rounded-lg shadow-sm border border-line-soft">
+                <img :src="previewUrl" class="max-w-full max-h-[70vh] object-contain rounded" />
+              </div>
+            </template>
+
+            <!-- Unsupported / Fallback -->
+            <template x-if="previewType === 'unsupported'">
+              <div class="text-center py-20 bg-white p-8 rounded-lg shadow-sm border border-line-soft">
+                <svg class="mx-auto h-12 w-12 text-slate-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                  width="48" height="48">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <h4 class="text-sm font-bold text-slate-700 mb-1">Pratinjau Tidak Didukung</h4>
+                <p class="text-xs text-slate-400 mb-4">Format berkas ini tidak dapat dipratinjau secara langsung.</p>
+                <a :href="previewUrl" target="_blank"
+                  class="btn primary inline-flex items-center gap-1.5 px-4 py-2 text-xs">
+                  Buka di Tab Baru
+                </a>
+              </div>
+            </template>
+          </div>
+        </div>
+        <div class="modal-f flex items-center justify-end gap-2 border-t border-line px-4.5 py-3"
+          style="display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
+          <a :href="previewUrl" target="_blank" download class="btn ghost text-xs flex items-center gap-1.5"
+            style="display: inline-flex; align-items: center; gap: 6px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            Unduh File
+          </a>
+          <button type="button" class="btn primary text-xs" @click="closePreview">Tutup</button>
+        </div>
       </div>
     </div>
-  </div>
 
-</main>
+  </main>
 
   @push('styles')
     <style>
@@ -547,12 +620,40 @@
       .bg-\[\#7a5bbd {
         background-color: #7a5bbd;
       }
-      .excel-table-wrapper { overflow-x: auto; max-width: 100%; }
-      .excel-table-wrapper table { border-collapse: collapse; min-width: 100%; font-size: 11px; font-family: sans-serif; color: #1e293b; }
-      .excel-table-wrapper th, .excel-table-wrapper td { border: 1px solid #e2e8f0; padding: 5px 9px; text-align: left; min-width: 60px; }
-      .excel-table-wrapper tr:first-child { background-color: #f1f5f9; font-weight: 600; }
-      .excel-table-wrapper tr:nth-child(even) { background-color: #f8fafc; }
-      .excel-table-wrapper tr:hover { background-color: #f1f5f9; }
+
+      .excel-table-wrapper {
+        overflow-x: auto;
+        max-width: 100%;
+      }
+
+      .excel-table-wrapper table {
+        border-collapse: collapse;
+        min-width: 100%;
+        font-size: 11px;
+        font-family: sans-serif;
+        color: #1e293b;
+      }
+
+      .excel-table-wrapper th,
+      .excel-table-wrapper td {
+        border: 1px solid #e2e8f0;
+        padding: 5px 9px;
+        text-align: left;
+        min-width: 60px;
+      }
+
+      .excel-table-wrapper tr:first-child {
+        background-color: #f1f5f9;
+        font-weight: 600;
+      }
+
+      .excel-table-wrapper tr:nth-child(even) {
+        background-color: #f8fafc;
+      }
+
+      .excel-table-wrapper tr:hover {
+        background-color: #f1f5f9;
+      }
     </style>
   @endpush
 
@@ -579,12 +680,14 @@
           uploadId: null,
           uploadTargetName: '',
           uploading: false,
+          uploadHistory: [],
 
           previewModal: false,
           previewUrl: '',
           previewTitle: '',
           previewType: '',
           previewLoading: false,
+          previewFiles: [],
 
           regModal: false,
           regModalMode: 'add',
@@ -636,10 +739,58 @@
             return hasVis;
           },
 
-          openUploadModal(type, id, targetName) {
+          openUploadModal(type, item, targetName) {
             this.uploadType = type;
-            this.uploadId = id;
+            this.uploadId = item.id;
             this.uploadTargetName = targetName;
+
+            this.uploadHistory = [];
+            const seenUrls = new Set();
+
+            if (item.history && Array.isArray(item.history)) {
+              item.history.forEach(h => {
+                if (h.url && !seenUrls.has(h.url)) {
+                  seenUrls.add(h.url);
+                  this.uploadHistory.push({
+                    url: h.url,
+                    filename: h.filename || h.url.split('/').pop(),
+                    uploaded_at: h.uploaded_at,
+                    uploaded_by: h.uploaded_by || 'System',
+                    source: 'Lama'
+                  });
+                }
+              });
+            }
+
+            if (item.upload_files && Array.isArray(item.upload_files)) {
+              item.upload_files.forEach(u => {
+                if (u.file && !seenUrls.has(u.file)) {
+                  seenUrls.add(u.file);
+                  this.uploadHistory.push({
+                    id: u.id,
+                    is_link: false,
+                    url: u.file,
+                    filename: u.file.split('/').pop().split('?')[0],
+                    uploaded_at: new Date(u.created_at).toLocaleString('id-ID'),
+                    uploaded_by: u.user ? u.user.name : 'System'
+                  });
+                }
+              });
+            }
+
+            if (item.link && !seenUrls.has(item.link)) {
+              seenUrls.add(item.link);
+              this.uploadHistory.push({
+                id: item.id,
+                is_link: true,
+                url: item.link,
+                filename: item.link.split('/').pop().split('?')[0],
+                uploaded_at: '-',
+                uploaded_by: '-'
+              });
+            }
+            this.uploadHistory.reverse();
+
             if (this.$refs.uploadFile) this.$refs.uploadFile.value = '';
             this.uploadModal = true;
           },
@@ -664,26 +815,103 @@
               });
               const data = await res.json();
               if (data.success) {
-                this.$dispatch('upload-success', { type: this.uploadType, id: this.uploadId, url: data.url, status: data.status, history: data.history });
+                this.$dispatch('upload-success', { type: this.uploadType, id: this.uploadId, url: data.url, status: data.status, upload: data.upload });
                 this.uploadModal = false;
               } else {
                 alert('Upload gagal: ' + (data.message || 'Error'));
               }
             } catch (err) {
-              alert('Terjadi kesalahan saat mengupload berkas.');
+              alert(err.message);
+            } finally {
+              this.uploading = false;
             }
-            this.uploading = false;
           },
 
-          async openPreview(url, title) {
-            this.previewUrl = url;
+          async deleteFile(h) {
+            if (!confirm('Apakah Anda yakin ingin menghapus file ini?')) return;
+            try {
+              const res = await fetch(`/upload-document/${h.id}`, {
+                method: 'DELETE',
+                headers: { 
+                  'Content-Type': 'application/json',
+                  'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ is_link: h.is_link, type: this.uploadType })
+              });
+              const data = await res.json();
+              if (!res.ok) throw new Error(data.message || 'Gagal menghapus file');
+              
+              if (data.success) {
+                this.uploadHistory = this.uploadHistory.filter(x => x !== h);
+                this.$dispatch(this.uploadType === 'regulasi' ? 'regulasi-updated' : 'ep-updated', { code: data.pokja_code, data: data.item });
+                if (this.uploadHistory.length === 0) {
+                  this.uploadModal = false;
+                }
+              }
+            } catch (err) {
+              alert(err.message);
+            }
+          },
+
+          openPreview(item, title) {
             this.previewTitle = title || 'Pratinjau Dokumen';
+            this.previewFiles = [];
+            const seenUrls = new Set();
+
+            if (item.history && Array.isArray(item.history)) {
+              item.history.forEach(h => {
+                if (h.url && !seenUrls.has(h.url)) {
+                  seenUrls.add(h.url);
+                  this.previewFiles.push({
+                    url: h.url,
+                    filename: h.filename || h.url.split('/').pop(),
+                    uploaded_at: h.uploaded_at,
+                    source: ''
+                  });
+                }
+              });
+            }
+
+            if (item.upload_files && Array.isArray(item.upload_files)) {
+              item.upload_files.forEach(u => {
+                if (u.file && !seenUrls.has(u.file)) {
+                  seenUrls.add(u.file);
+                  this.previewFiles.push({
+                    url: u.file,
+                    filename: u.file.split('/').pop().split('?')[0],
+                    uploaded_at: new Date(u.created_at).toLocaleString('id-ID'),
+                    source: ''
+                  });
+                }
+              });
+            }
+
+            if (item.link && !seenUrls.has(item.link)) {
+              seenUrls.add(item.link);
+              this.previewFiles.push({
+                url: item.link,
+                filename: item.link.split('/').pop().split('?')[0],
+                uploaded_at: '-',
+                source: 'Lama'
+              });
+            }
+            this.previewFiles.reverse();
+
             this.previewModal = true;
+            if (this.previewFiles.length > 0) {
+              this.changePreviewFile(this.previewFiles[0].url);
+            } else if (item.link) {
+              this.changePreviewFile(item.link);
+            }
+          },
+
+          changePreviewFile(url) {
+            this.previewUrl = url;
             this.previewLoading = true;
             this.previewType = '';
-            
+
             const ext = url.split('.').pop().toLowerCase().split('?')[0];
-            
+
             if (['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp'].includes(ext)) {
               this.previewType = 'image';
               this.previewLoading = false;
@@ -714,21 +942,21 @@
                   if (!response.ok) throw new Error('Gagal mengunduh berkas Excel.');
                   const arrayBuffer = await response.arrayBuffer();
                   const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-                  
+
                   let htmlContent = '';
                   workbook.SheetNames.forEach((sheetName) => {
                     const worksheet = workbook.Sheets[sheetName];
                     const rawHtml = XLSX.utils.sheet_to_html(worksheet, { header: '', footer: '' });
-                    
+
                     htmlContent += `
-                      <div class="mb-6 bg-white p-4 rounded-lg shadow-sm border border-line-soft overflow-auto">
-                        <h4 class="text-xs font-bold text-teal mb-3 pb-1.5 border-b border-line flex items-center gap-1.5">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                          Sheet: ${sheetName}
-                        </h4>
-                        <div class="excel-table-wrapper">${rawHtml}</div>
-                      </div>
-                    `;
+                                          <div class="mb-6 bg-white p-4 rounded-lg shadow-sm border border-line-soft overflow-auto">
+                                            <h4 class="text-xs font-bold text-teal mb-3 pb-1.5 border-b border-line flex items-center gap-1.5">
+                                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                              Sheet: ${sheetName}
+                                            </h4>
+                                            <div class="excel-table-wrapper">${rawHtml}</div>
+                                          </div>
+                                        `;
                   });
                   this.$refs.previewXlsxContainer.innerHTML = htmlContent || '<div class="text-center py-12 text-slate-400">Lembar kerja kosong.</div>';
                 } catch (err) {
@@ -768,10 +996,15 @@
               const url = this.regModalMode === 'add' ? `${window.baseUrl}/pokja/${this.regForm.pokja_code}/regulasi` : `${window.baseUrl}/regulasi/${this.regForm.id}`;
               const method = this.regModalMode === 'add' ? 'POST' : 'PUT';
 
+              const payload = { ...this.regForm };
+              delete payload.history;
+              delete payload.upload_files;
+              delete payload.pokja;
+
               const res = await fetch(url, {
                 method: method,
                 headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': window.csrfToken },
-                body: JSON.stringify(this.regForm)
+                body: JSON.stringify(payload)
               });
 
               if (res.ok) {
@@ -809,10 +1042,16 @@
               const url = this.epModalMode === 'add' ? `${window.baseUrl}/pokja/${this.epForm.pokja_code}/ep` : `${window.baseUrl}/ep/${this.epForm.id}`;
               const method = this.epModalMode === 'add' ? 'POST' : 'PUT';
 
+              const payload = { ...this.epForm };
+              delete payload.history;
+              delete payload.upload_files;
+              delete payload.pokja;
+              delete payload.standar;
+
               const res = await fetch(url, {
                 method: method,
                 headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': window.csrfToken },
-                body: JSON.stringify(this.epForm)
+                body: JSON.stringify(payload)
               });
 
               if (res.ok) {
@@ -902,20 +1141,15 @@
               if (e.detail.type === 'regulasi') {
                 let reg = this.regulasis.find(r => r.id == e.detail.id);
                 if (reg) {
-                  reg.link = e.detail.url;
-                  reg.history = e.detail.history;
+                  if (!reg.upload_files) reg.upload_files = [];
+                  if (e.detail.upload) reg.upload_files.push(e.detail.upload);
                   if (e.detail.status) reg.status = e.detail.status;
                 }
               } else if (e.detail.type === 'ep') {
                 let ep = this.epItems.find(r => r.id == e.detail.id);
                 if (ep) {
-                  ep.link = e.detail.url;
-                  ep.history = e.detail.history;
-                  fetch(`${window.baseUrl}/ep/${ep.id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': window.csrfToken },
-                    body: JSON.stringify(ep)
-                  });
+                  if (!ep.upload_files) ep.upload_files = [];
+                  if (e.detail.upload) ep.upload_files.push(e.detail.upload);
                 }
               }
             });

@@ -12,6 +12,7 @@ class Regulasi extends Model
         'jenis',
         'pic',
         'link',
+        'history',
         'keterangan',
         'is_verified',
     ];
@@ -41,5 +42,10 @@ class Regulasi extends Model
         }
         
         return 'Proses';
+    }
+
+    public function uploadFiles()
+    {
+        return $this->hasMany(UploadFile::class, 'related_id')->where('jenis_upload', 'regulasi')->orderBy('id', 'asc');
     }
 }

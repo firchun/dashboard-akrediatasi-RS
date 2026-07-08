@@ -42,13 +42,27 @@ class RegulasiController extends Controller
         $reg = Regulasi::findOrFail($id);
 
         $data = $request->only([
-            'nama', 'jenis', 'pic', 'link', 'keterangan'
+            'nama',
+            'jenis',
+            'pic',
+            'link',
+            'keterangan'
         ]);
+
+        if (isset($data['link']) && $data['link'] !== '' && $data['link'] !== $reg->link && !empty($reg->link)) {
+            \App\Models\UploadFile::create([
+                'jenis_upload' => 'regulasi',
+                'file' => $data['link'],
+                'id_user' => auth()->id(),
+                'related_id' => $reg->id
+            ]);
+            unset($data['link']);
+        }
 
         if (auth()->user()->role === 'verifikator' || auth()->user()->isAdmin()) {
             if ($request->has('is_verified')) {
                 $checkVerified = $request->is_verified ? true : false;
-                
+
                 if ($checkVerified) {
                     $checkPic = $data['pic'] ?? $reg->pic;
                     $checkLink = $data['link'] ?? $reg->link;
@@ -57,7 +71,7 @@ class RegulasiController extends Controller
                         return response()->json(['message' => 'Status Selesai (Verifikasi) membutuhkan dokumen dan PIC yang terisi.'], 400);
                     }
                 }
-                
+
                 $data['is_verified'] = $checkVerified;
             }
         }
@@ -75,7 +89,7 @@ class RegulasiController extends Controller
             'file' => [
                 'required',
                 'file',
-                'max:20480',
+                'max:51200',
                 function ($attribute, $value, $fail) {
                     $ext = strtolower($value->getClientOriginalExtension());
                     $allowed = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'jpg', 'jpeg', 'png', 'webp', 'zip', 'rar'];
@@ -96,8 +110,6 @@ class RegulasiController extends Controller
         }
 
         $file = $request->file('file');
-        $history = $item->history ?? [];
-        $newVersion = count($history) + 1;
         
         $pokjaCode = $item->pokja?->code ?? 'UMUM';
         $type = $request->type; // 'regulasi' or 'ep'
@@ -110,29 +122,29 @@ class RegulasiController extends Controller
             $baseName = \Illuminate\Support\Str::slug($item->nama ?? 'doc');
         }
 
+        // Hitung jumlah file baru yang sudah ada untuk menentukan versi
+        $existingNewFiles = \App\Models\UploadFile::where('related_id', $item->id)
+                            ->where('jenis_upload', $type)
+                            ->count();
+        $newVersion = $existingNewFiles + 1;
+
         $fileName = $pokjaCode . '_' . $type . '_' . $baseName . '_v' . $newVersion . '_' . date('dmYHis') . '.' . $file->getClientOriginalExtension();
-        
+
         $path = $file->storeAs('uploads', $fileName, 'public');
         $url = asset('storage/' . $path);
 
-        $history[] = [
-            'version' => $newVersion,
-            'url' => $url,
-            'filename' => $fileName,
-            'uploaded_at' => now()->toDateTimeString(),
-            'uploaded_by' => auth()->user()->name ?? 'System'
-        ];
-
-        $item->update([
-            'link' => $url,
-            'history' => $history
+        $uploadRecord = \App\Models\UploadFile::create([
+            'jenis_upload' => $request->type,
+            'file' => $url,
+            'id_user' => auth()->id(),
+            'related_id' => $item->id
         ]);
 
         return response()->json([
             'success' => true,
             'url' => $url,
             'status' => $item->status ?? null,
-            'history' => $history
+            'upload' => $uploadRecord->load('user')
         ]);
     }
 
@@ -140,7 +152,54 @@ class RegulasiController extends Controller
     {
         $reg = Regulasi::findOrFail($id);
         $reg->delete();
-
         return response()->json(['success' => true]);
     }
+
+    public function deleteUpload(Request $request, $id)
+    {
+        $isLink = $request->boolean('is_link');
+        $type = $request->input('type');
+        $item = null;
+        $pokjaCode = '';
+
+        if ($isLink) {
+            if ($type === 'ep') {
+                $item = \App\Models\EpItem::with(['uploadFiles', 'pokja'])->find($id);
+            } else {
+                $item = Regulasi::with(['uploadFiles', 'pokja'])->find($id);
+            }
+            if ($item) {
+                $item->update(['link' => null]);
+                $item->refresh();
+                $pokjaCode = $item->pokja->code ?? '';
+            }
+        } else {
+            $upload = \App\Models\UploadFile::find($id);
+            if ($upload) {
+                if ($type === 'ep') {
+                    $item = \App\Models\EpItem::with(['uploadFiles', 'pokja'])->find($upload->related_id);
+                } else {
+                    $item = Regulasi::with(['uploadFiles', 'pokja'])->find($upload->related_id);
+                }
+                $upload->delete();
+                if ($item) {
+                    $item->load('uploadFiles');
+                    $item->upload_files = $item->uploadFiles; // Ensure frontend gets the array as 'upload_files' if it expects it
+                    $pokjaCode = $item->pokja->code ?? '';
+                }
+            }
+        }
+
+        if ($item) {
+            // Append upload_files explicitly since model returns uploadFiles by default
+            $item->setAttribute('upload_files', $item->uploadFiles);
+        }
+
+        return response()->json([
+            'success' => true,
+            'item' => $item,
+            'pokja_code' => $pokjaCode
+        ]);
+    }
+
 }

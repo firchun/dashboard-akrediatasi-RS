@@ -17,13 +17,13 @@ class PokjaController extends Controller
         if (!$user->isAdmin()) {
             if ($user->pokja) {
                 $pokjas = Pokja::where('id', $user->pokja_id)
-                    ->with(['regulasis', 'standars.epItems', 'epItems'])
+                    ->with(['regulasis.uploadFiles.user', 'standars.epItems', 'epItems'])
                     ->get();
             } else {
                 $pokjas = collect();
             }
         } else {
-            $pokjas = Pokja::with(['regulasis', 'standars.epItems', 'epItems'])->get();
+            $pokjas = Pokja::with(['regulasis.uploadFiles.user', 'standars.epItems', 'epItems'])->get();
         }
 
         return view('pokja.index', compact('pokjas', 'groups', 'setting'));
@@ -40,7 +40,7 @@ class PokjaController extends Controller
         }
 
         $pokja = Pokja::where('code', $code)
-            ->with(['regulasis', 'standars.epItems', 'epItems'])
+            ->with(['regulasis.uploadFiles.user', 'standars.epItems', 'epItems'])
             ->firstOrFail();
 
         $setting = Setting::first();

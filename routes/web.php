@@ -32,6 +32,7 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/regulasi/{id}', [RegulasiController::class, 'update'])->name('regulasi.update');
     Route::delete('/regulasi/{id}', [RegulasiController::class, 'destroy'])->name('regulasi.destroy');
     Route::post('/upload-document', [RegulasiController::class, 'upload'])->name('document.upload');
+    Route::delete('/upload-document/{id}', [RegulasiController::class, 'deleteUpload'])->name('document.delete');
 
     // EP Items & Penilaian
     Route::get('/pokja/{code}/penilaian-ep', [EpItemController::class, 'penilaian'])->name('ep.penilaian')->middleware('pokja.access');

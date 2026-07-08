@@ -27,7 +27,7 @@ class EpItemController extends Controller
         }
 
         $pokja = Pokja::where('code', $code)
-            ->with(['standars.epItems', 'epItems'])
+            ->with(['standars.epItems.uploadFiles.user', 'epItems.uploadFiles.user'])
             ->firstOrFail();
 
         $setting = \App\Models\Setting::first();
@@ -63,7 +63,7 @@ class EpItemController extends Controller
     public function getDataEp($code)
     {
         $pokja = Pokja::where('code', $code)
-            ->with(['standars.epItems', 'epItems'])
+            ->with(['standars.epItems.uploadFiles.user', 'epItems.uploadFiles.user'])
             ->firstOrFail();
 
         return response()->json([
@@ -101,6 +101,17 @@ class EpItemController extends Controller
     public function update(Request $request, $id)
     {
         $item = EpItem::findOrFail($id);
+
+        $newLink = $request->link;
+        if ($newLink && $newLink !== $item->link && !empty($item->link)) {
+            \App\Models\UploadFile::create([
+                'jenis_upload' => 'ep',
+                'file' => $newLink,
+                'id_user' => auth()->id(),
+                'related_id' => $item->id
+            ]);
+            $request->merge(['link' => $item->link]); // prevent overwrite
+        }
 
         $item->update([
             'standar_id' => $request->standar_id ?? $item->standar_id,
