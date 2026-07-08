@@ -21,6 +21,11 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 // Dashboard (public)
 Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
+// File Manager
+Route::get("/file-manager", [App\Http\Controllers\FileController::class, "index"])->name("file.manager")->middleware("auth");
+Route::get("/api/file-manager", [App\Http\Controllers\FileController::class, "getData"])->name("file.manager.data")->middleware("auth");
+
+
 // Pokja (auth required, filtered by role)
 Route::middleware(['auth'])->group(function () {
     Route::get('/pokja', [PokjaController::class, 'index'])->name('pokja.index');

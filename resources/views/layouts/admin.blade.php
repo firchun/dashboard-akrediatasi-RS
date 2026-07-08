@@ -20,6 +20,9 @@
       <a href="{{ route('dashboard') }}" class="px-3.5 py-2 rounded-lg text-xs font-semibold text-[#aacdd5] hover:bg-white/8 hover:text-white transition duration-150 {{ request()->routeIs('dashboard') ? 'bg-teal/25 text-white' : '' }}">Dashboard</a>
       @auth
       <a href="{{ route('pokja.index') }}" class="px-3.5 py-2 rounded-lg text-xs font-semibold text-[#aacdd5] hover:bg-white/8 hover:text-white transition duration-150 {{ request()->routeIs('pokja.*') ? 'bg-teal/25 text-white' : '' }}">Pokja</a>
+        @if(in_array(auth()->user()->role, ["it", "ketua_tim", "regulasi"]))
+        <a href="{{ route("file.manager") }}" class="px-3.5 py-2 rounded-lg text-xs font-semibold text-[#aacdd5] hover:bg-white/8 hover:text-white transition duration-150 {{ request()->routeIs("file.*") ? "bg-teal/25 text-white" : "" }}">File</a>
+        @endif
         @if(auth()->user()->hasSettingsAccess())
         <a href="{{ route('settings.index') }}" class="px-3.5 py-2 rounded-lg text-xs font-semibold text-[#aacdd5] hover:bg-white/8 hover:text-white transition duration-150 {{ request()->routeIs('settings.*') ? 'bg-teal/25 text-white' : '' }}">Settings</a>
         @endif
