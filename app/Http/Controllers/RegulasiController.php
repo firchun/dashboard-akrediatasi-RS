@@ -89,12 +89,12 @@ class RegulasiController extends Controller
             'file' => [
                 'required',
                 'file',
-                'max:51200',
+                'max:102400',
                 function ($attribute, $value, $fail) {
                     $ext = strtolower($value->getClientOriginalExtension());
-                    $allowed = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'jpg', 'jpeg', 'png', 'webp', 'zip', 'rar'];
+                    $allowed = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'jpg', 'jpeg', 'png', 'webp', 'zip', 'rar', 'mp4', 'mkv', 'avi', 'mov', 'webm'];
                     if (!in_array($ext, $allowed)) {
-                        $fail('Format file tidak valid. Hanya gambar (jpg/png) dan dokumen (pdf/doc/xls/dll) yang diperbolehkan.');
+                        $fail('Format file tidak valid. Hanya gambar (jpg/png), dokumen (pdf/doc/xls/dll), dan video (mp4/mkv/dll) yang diperbolehkan.');
                     }
                 }
             ],
