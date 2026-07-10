@@ -174,14 +174,25 @@
       </div>
     </div>
 
-    <div class="flex items-baseline justify-between gap-4 mt-8 mb-3 flex-wrap">
-      <h2 class="m-0 text-sm sm:text-base font-bold tracking-tight text-ink flex items-center gap-2">
-        <span class="w-1 h-[18px] rounded-[2px] bg-teal"></span> Panel Kesiapan per Pokja
-      </h2>
-      <span class="text-xs text-slate-500">Klik sel untuk melihat detail pokja</span>
-    </div>
+    <div x-data="{ viewMode: 'card' }" class="mt-8">
+      <div class="flex items-center justify-between gap-4 mb-3 flex-wrap">
+        <h2 class="m-0 text-sm sm:text-base font-bold tracking-tight text-ink flex items-center gap-2">
+          <span class="w-1 h-[18px] rounded-[2px] bg-teal"></span> Panel Kesiapan per Pokja
+        </h2>
+        <div class="flex items-center gap-3">
+          <span class="text-xs text-slate-500 hidden sm:inline">Klik sel untuk melihat detail</span>
+          <div class="bg-slate-100 p-0.5 rounded-lg flex items-center text-xs font-semibold border border-line-soft">
+            <button @click="viewMode = 'card'" :class="viewMode === 'card' ? 'bg-white shadow-sm text-teal-deep' : 'text-slate-400 hover:text-slate-600'" class="px-2.5 py-1.5 rounded-md transition-colors flex items-center gap-1.5">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg> Card
+            </button>
+            <button @click="viewMode = 'list'" :class="viewMode === 'list' ? 'bg-white shadow-sm text-teal-deep' : 'text-slate-400 hover:text-slate-600'" class="px-2.5 py-1.5 rounded-md transition-colors flex items-center gap-1.5">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg> List
+            </button>
+          </div>
+        </div>
+      </div>
 
-    <div class="bg-card border border-line rounded-[14px] p-4 shadow-custom">
+      <div class="bg-card border border-line rounded-[14px] p-4 shadow-custom">
       @foreach($groups as $gk)
         @php $list = $pokjas->filter(function ($p) use ($gk) {
         return $p->group === $gk; }); @endphp
@@ -189,7 +200,7 @@
           <div class="mb-5 last:mb-2">
             <h3 class="my-1.5 mx-0.5 text-[10px] tracking-wider uppercase text-slate-400 font-bold">{{ $groupLabels[$gk] }}
             </h3>
-            <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2.5">
+            <div :class="viewMode === 'card' ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3' : 'grid grid-cols-1 lg:grid-cols-2 gap-3'">
               @foreach($list as $p)
                 @php
                   $s = DC::pokjaStats($p);
@@ -198,15 +209,68 @@
                   $col = $colors[$tier];
                 @endphp
                 <a href="{{ route('pokja.show', $p->code) }}"
-                  class="border border-line rounded-xl p-2.5 bg-white text-left relative overflow-hidden transition duration-150 ease-in-out border-l-4 hover:-translate-y-0.5 hover:shadow-lg cursor-pointer block w-full"
-                  style="border-left-color: {{ $col }}">
-                  <div class="font-mono font-bold text-xs sm:text-sm text-ink">{{ $p->code }}</div>
-                  <div class="font-mono font-bold text-lg sm:text-xl mt-1.5 leading-none" style="color:{{ $col }}">
-                    {{ $s->pct }}%</div>
-                  <div class="text-[10px] sm:text-xs text-slate-400 mt-0.5">{{ $s->Selesai }}/{{ $s->total }} selesai
-                    {!! $s->overdue ? '· <b class="text-danger">' . $s->overdue . ' lewat</b>' : '' !!}</div>
-                  <div class="h-1 rounded-full bg-line-soft mt-2 overflow-hidden">
-                    <div class="h-full rounded-full" style="width:{{ $s->pct }}%; background:{{ $col }}"></div>
+                  :class="viewMode === 'card' ? 'block' : 'flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6'"
+                  class="bg-white text-left relative overflow-hidden transition duration-150 ease-in-out hover:-translate-y-0.5 hover:shadow-lg cursor-pointer w-full"
+                  style="border: 2px solid {{ $col }}; border-radius: 16px; padding: 1rem;">
+                  
+                  <div :class="viewMode === 'card' ? 'pb-2 mb-3' : 'min-w-[80px]'" :style="viewMode === 'card' ? 'border-bottom: 2px solid {{ $col }} !important;' : ''">
+                    <div class="font-bold text-base tracking-wide" style="color: #1f2937;">{{ $p->code }}</div>
+                  </div>
+                  
+                  <div :class="viewMode === 'card' ? 'block' : 'flex-1 grid grid-cols-2 gap-4'">
+                    <!-- Regulasi Section -->
+                    <div class="flex items-center gap-3" :class="viewMode === 'card' ? 'mb-3 pb-3 border-b border-line' : ''">
+                      <!-- Circular Progress -->
+                      <div class="relative flex-shrink-0" style="width: 50px; height: 50px;">
+                        <svg class="transform -rotate-90" style="width: 50px; height: 50px;">
+                          <circle cx="25" cy="25" r="21" stroke="currentColor" stroke-width="3" fill="transparent" class="text-slate-100" />
+                          <circle cx="25" cy="25" r="21" stroke="currentColor" stroke-width="3" fill="transparent" 
+                            style="color: {{ $col }}; stroke-dasharray: 131.9; stroke-dashoffset: {{ 131.9 - (131.9 * $s->pct / 100) }}; transition: stroke-dashoffset 0.5s ease;" stroke-linecap="round" />
+                        </svg>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                          <span class="font-bold" style="font-size: 13px; color: black;">{{ $s->pct }}%</span>
+                        </div>
+                      </div>
+                      
+                      <!-- Text info -->
+                      <div class="flex flex-col justify-center">
+                        <span class="font-bold text-sm leading-tight" style="color: #1f2937;">Regulasi</span>
+                        <span class="font-bold text-sm leading-tight mt-1" style="color: #1f2937;">{{ $s->Selesai }}/{{ $s->total }} selesai</span>
+                        @if($s->overdue || $s->Proses + $s->Review > 0)
+                        <div class="mt-1 flex gap-1 font-semibold" style="font-size: 10px; color: #6b7280;">
+                          @if($s->Proses + $s->Review > 0) <span class="text-amber-600">{{ $s->Proses + $s->Review }} prs</span> @endif
+                          @if($s->overdue) <span class="text-danger">({{ $s->overdue }} telat)</span> @endif
+                        </div>
+                        @endif
+                      </div>
+                    </div>
+
+                    <!-- Skor EP Section -->
+                    <div class="flex items-center gap-3">
+                      <!-- Circular Progress -->
+                      <div class="relative flex-shrink-0" style="width: 50px; height: 50px;">
+                        <svg class="transform -rotate-90" style="width: 50px; height: 50px;">
+                          <circle cx="25" cy="25" r="21" stroke="currentColor" stroke-width="3" fill="transparent" class="text-slate-100" />
+                          <circle cx="25" cy="25" r="21" stroke="currentColor" stroke-width="3" fill="transparent" 
+                            style="color: {{ $col }}; stroke-dasharray: 131.9; stroke-dashoffset: {{ 131.9 - (131.9 * $s->ep_score / 100) }}; transition: stroke-dashoffset 0.5s ease;" stroke-linecap="round" />
+                        </svg>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                          <span class="font-bold" style="font-size: 13px; color: black;">{{ $s->ep_score }}%</span>
+                        </div>
+                      </div>
+                      
+                      <!-- Text info -->
+                      <div class="flex flex-col justify-center w-full">
+                        <span class="font-bold text-sm leading-tight" style="color: #1f2937;">Elemen Penilaian</span>
+                        <span class="font-bold text-sm leading-tight mt-1" style="color: #1f2937;">{{ $s->ep->TL + $s->ep->TS }}/{{ $s->ep->total }} selesai</span>
+                        <div class="flex flex-wrap items-center gap-1 mt-1.5" style="font-size: 9px;">
+                          <span class="px-1.5 py-0.5 rounded font-bold" style="background-color: #a7f3d0; color: #065f46;">TL:{{ $s->ep->TL }}</span>
+                          <span class="px-1.5 py-0.5 rounded font-bold" style="background-color: #fde047; color: #854d0e;">TS:{{ $s->ep->TS }}</span>
+                          <span class="px-1.5 py-0.5 rounded font-bold" style="background-color: #fca5a5; color: #991b1b;">TT:{{ $s->ep->TT }}</span>
+                          <span class="px-1.5 py-0.5 rounded font-bold" style="background-color: #e5e7eb; color: #374151;">TDD:{{ $s->ep->TDD }}</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </a>
               @endforeach
@@ -215,6 +279,7 @@
         @endif
       @endforeach
     </div>
+  </div>
 
     <div class="flex flex-wrap gap-3.5 mx-0.5 mt-3.5 mb-1 text-xs text-slate-500">
       <span class="inline-flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-[3px] inline-block bg-t-none"></i>

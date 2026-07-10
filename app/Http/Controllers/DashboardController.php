@@ -11,7 +11,7 @@ class DashboardController extends Controller
     public function index()
     {
         $setting = Setting::first();
-        $pokjas = Pokja::withCount(['regulasis', 'epItems'])->with('regulasis')->get();
+        $pokjas = Pokja::withCount(['regulasis', 'epItems'])->with(['regulasis', 'epItems'])->get();
         $globalStats = $this->globalStats($pokjas);
 
         return view('dashboard.index', compact('setting', 'pokjas', 'globalStats'));
@@ -117,6 +117,19 @@ class DashboardController extends Controller
         }
 
         $stats['pct'] = self::readinessPokja($pokja);
+
+        $epItems = $pokja->epItems;
+        $epStats = ['TL' => 0, 'TS' => 0, 'TT' => 0, 'TDD' => 0, 'total' => 0];
+        if ($epItems && $epItems->count() > 0) {
+            $epStats['TL'] = $epItems->where('nilai', 'TL')->count();
+            $epStats['TS'] = $epItems->where('nilai', 'TS')->count();
+            $epStats['TT'] = $epItems->where('nilai', 'TT')->count();
+            $epStats['TDD'] = $epItems->where('nilai', 'TDD')->count();
+            $epStats['total'] = $epItems->count();
+        }
+        $stats['ep'] = (object) $epStats;
+        $stats['ep_score'] = self::epScore($pokja);
+
         return (object) $stats;
     }
 
