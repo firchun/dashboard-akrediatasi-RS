@@ -830,7 +830,7 @@
           async deleteFile(h) {
             if (!confirm('Apakah Anda yakin ingin menghapus file ini?')) return;
             try {
-              const res = await fetch(`/upload-document/${h.id}`, {
+              const res = await fetch(`${window.baseUrl}/upload-document/${h.id}`, {
                 method: 'DELETE',
                 headers: { 
                   'Content-Type': 'application/json',
