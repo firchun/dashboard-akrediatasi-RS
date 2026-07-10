@@ -143,8 +143,11 @@
                       x-text="ep.pic || '-'"></span></td>
                   <td class="py-2">
                     <div class="doklink">
-                      <a class="dl-icon" :class="(ep.link || (ep.upload_files && ep.upload_files.length > 0)) ? 'on' : 'cursor-not-allowed opacity-50'" :href="ep.link || null"
-                        :target="(ep.link || (ep.upload_files && ep.upload_files.length > 0)) ? '_blank' : null" rel="noopener"
+                      <a class="dl-icon"
+                        :class="(ep.link || (ep.upload_files && ep.upload_files.length > 0)) ? 'on' : 'cursor-not-allowed opacity-50'"
+                        :href="ep.link || null"
+                        :target="(ep.link || (ep.upload_files && ep.upload_files.length > 0)) ? '_blank' : null"
+                        rel="noopener"
                         :title="(ep.link || (ep.upload_files && ep.upload_files.length > 0)) ? 'Buka dokumen' : 'Belum ada dokumen'"
                         @click.prevent="(ep.link || (ep.upload_files && ep.upload_files.length > 0)) ? openPreview(ep, std.kode + ' EP ' + (ep.no_urut || '')) : null">
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -333,7 +336,6 @@
               Pilih dokumen untuk <strong class="text-teal" x-text="uploadTargetName"></strong>.
             </div>
 
-            <!-- History List -->
             <div class="mb-5" x-show="uploadHistory.length > 0">
               <h4 class="text-xs font-bold text-slate-700 mb-2">Riwayat File:</h4>
               <div class="flex flex-col gap-2 max-h-[200px] overflow-y-auto pr-1">
@@ -349,8 +351,15 @@
                         <span x-text="h.uploaded_by"></span>
                       </div>
                     </div>
-                    <button type="button" @click="deleteFile(h)" class="text-red-500 hover:text-red-700 p-1.5 rounded-md hover:bg-red-50 transition" title="Hapus File">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                    <button type="button" @click="deleteFile(h)"
+                      class="text-red-500 hover:text-red-700 p-1.5 rounded-md hover:bg-red-50 transition"
+                      title="Hapus File">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                        </path>
+                        <line x1="10" y1="11" x2="10" y2="17"></line>
+                        <line x1="14" y1="11" x2="14" y2="17"></line>
+                      </svg>
                     </button>
                   </div>
                 </template>
@@ -359,13 +368,27 @@
             <hr class="border-line mb-4" x-show="uploadHistory.length > 0" />
 
             <h4 class="text-xs font-bold text-slate-700 mb-2">Tambah Dokumen Baru:</h4>
-            <input type="file" x-ref="uploadFile" required
-              class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal hover:file:bg-teal-100 transition" />
+
+            <div
+              class="w-full relative border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center transition-colors text-center"
+              @dragover.prevent="dragOver = true" @dragleave.prevent="dragOver = false"
+              @drop.prevent="dragOver = false; handleDrop($event.dataTransfer.files)"
+              :class="dragOver ? 'border-teal bg-teal-50' : 'border-slate-300 bg-slate-50 hover:bg-slate-100 cursor-pointer'"
+              @click="$refs.uploadFile.click()">
+              <svg class="w-10 h-10 text-teal mb-3" style="width:100px; height:100px;" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+              </svg>
+
+              <div class="text-sm font-semibold text-slate-700">Tarik & Lepas File di Sini</div>
+              <div class="text-xs text-slate-500 mt-1">Atau klik untuk memilih file dari perangkat</div>
+
+              <input type="file" x-ref="uploadFile" multiple @change="handleDrop($event.target.files)" class="hidden" />
+            </div>
           </div>
           <div class="modal-f">
-            <button type="button" class="btn ghost" @click="uploadModal = false">Batal</button>
-            <button type="submit" class="btn primary" :disabled="uploading"
-              x-text="uploading ? 'Mengunggah...' : 'Unggah'"></button>
+            <button type="button" class="btn ghost w-full" @click="uploadModal = false">Tutup</button>
           </div>
         </form>
       </div>
@@ -519,6 +542,12 @@
           standars: standarsData,
           epItems: epItemsData,
 
+          init() {
+            window.addEventListener('upload-success', () => {
+              this.reloadData();
+            });
+          },
+
           async reloadData() {
             try {
               const res = await fetch(`${window.baseUrl}/pokja/${this.code}/data-ep`, {
@@ -549,10 +578,10 @@
           importing: false,
 
           uploadModal: false,
+          dragOver: false,
           uploadType: '',
           uploadId: null,
           uploadTargetName: '',
-          uploading: false,
           uploadHistory: [],
 
           previewModal: false,
@@ -766,44 +795,22 @@
             if (this.$refs.uploadFile) this.$refs.uploadFile.value = '';
             this.uploadModal = true;
           },
-
-          async submitUpload() {
-            const fileInput = this.$refs.uploadFile;
-            if (!fileInput.files.length) return;
-
-            this.uploading = true;
-            const formData = new FormData();
-            formData.append('_token', window.csrfToken);
-            formData.append('type', this.uploadType);
-            formData.append('id', this.uploadId);
-            formData.append('file', fileInput.files[0]);
-
-            try {
-              const res = await fetch(`${window.baseUrl}/upload-document`, {
-                method: 'POST',
-                credentials: 'same-origin',
-                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-                body: formData
-              });
-              const data = await res.json();
-              if (data.success) {
-                this.uploadModal = false;
-                await this.reloadData();
-              } else {
-                alert('Upload gagal: ' + (data.message || 'Error'));
-              }
-            } catch (err) {
-              alert('Terjadi kesalahan.');
+          handleDrop(files) {
+            if (!files || files.length === 0) return;
+            if (window.GlobalUploader) {
+              window.GlobalUploader.addFiles(this.uploadType, this.uploadId, files);
+              this.$refs.uploadFile.value = '';
+              this.uploadModal = false; // tutup modal agar progress melayang lebih terlihat
+            } else {
+              alert('Uploader belum siap');
             }
-            this.uploading = false;
           },
-
           async deleteFile(h) {
             if (!confirm('Apakah Anda yakin ingin menghapus file ini?')) return;
             try {
               const res = await fetch(`${window.baseUrl}/upload-document/${h.id}`, {
                 method: 'DELETE',
-                headers: { 
+                headers: {
                   'Content-Type': 'application/json',
                   'X-CSRF-TOKEN': '{{ csrf_token() }}'
                 },
@@ -811,7 +818,7 @@
               });
               const data = await res.json();
               if (!res.ok) throw new Error(data.message || 'Gagal menghapus file');
-              
+
               if (data.success) {
                 this.uploadHistory = this.uploadHistory.filter(x => x !== h);
                 await this.reloadData();
@@ -920,14 +927,14 @@
                     const rawHtml = XLSX.utils.sheet_to_html(worksheet, { header: '', footer: '' });
 
                     htmlContent += `
-                    <div class="mb-6 bg-white p-4 rounded-lg shadow-sm border border-line-soft overflow-auto">
-                      <h4 class="text-xs font-bold text-teal mb-3 pb-1.5 border-b border-line flex items-center gap-1.5">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                        Sheet: ${sheetName}
-                      </h4>
-                      <div class="excel-table-wrapper">${rawHtml}</div>
-                    </div>
-                  `;
+                                        <div class="mb-6 bg-white p-4 rounded-lg shadow-sm border border-line-soft overflow-auto">
+                                          <h4 class="text-xs font-bold text-teal mb-3 pb-1.5 border-b border-line flex items-center gap-1.5">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                            Sheet: ${sheetName}
+                                          </h4>
+                                          <div class="excel-table-wrapper">${rawHtml}</div>
+                                        </div>
+                                      `;
                   });
                   this.$refs.previewXlsxContainer.innerHTML = htmlContent || '<div class="text-center py-12 text-slate-400">Lembar kerja kosong.</div>';
                 } catch (err) {
@@ -957,9 +964,9 @@
             const val = pct < 0 ? 0 : (pct > 100 ? 100 : pct);
             const dashoffset = ((100 - val) / 100) * c;
             return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" style="transform:rotate(-90deg)">
-            <circle r="${r}" cx="${size / 2}" cy="${size / 2}" fill="transparent" stroke="${bg}" stroke-width="${stroke}"></circle>
-            <circle r="${r}" cx="${size / 2}" cy="${size / 2}" fill="transparent" stroke="${color}" stroke-width="${stroke}" stroke-dasharray="${c}" stroke-dashoffset="${dashoffset}" stroke-linecap="round"></circle>
-          </svg>`;
+                                <circle r="${r}" cx="${size / 2}" cy="${size / 2}" fill="transparent" stroke="${bg}" stroke-width="${stroke}"></circle>
+                                <circle r="${r}" cx="${size / 2}" cy="${size / 2}" fill="transparent" stroke="${color}" stroke-width="${stroke}" stroke-dasharray="${c}" stroke-dashoffset="${dashoffset}" stroke-linecap="round"></circle>
+                              </svg>`;
           }
         }));
       });
