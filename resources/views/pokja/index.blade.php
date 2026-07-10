@@ -662,7 +662,7 @@
     <script src="https://cdn.jsdelivr.net/npm/docx-preview@0.1.15/dist/docx-preview.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script>
-      document.addEventListener('alpine:init', () => {
+      const initPokjaApp = () => {
         window.csrfToken = '{{ csrf_token() }}';
         const today = todayISO();
 
@@ -1267,7 +1267,9 @@
             if (res.ok) this.epItems.splice(index, 1);
           }
         }));
-      });
+      };
+      if (window.Alpine) initPokjaApp();
+      else document.addEventListener('alpine:init', initPokjaApp);
     </script>
   @endpush
 @endsection

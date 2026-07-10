@@ -535,7 +535,7 @@
     <script src="https://cdn.jsdelivr.net/npm/docx-preview@0.1.15/dist/docx-preview.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script>
-      document.addEventListener('alpine:init', () => {
+      const initEpPageApp = () => {
         window.csrfToken = '{{ csrf_token() }}';
         Alpine.data('epPageApp', (code, standarsData, epItemsData) => ({
           code: code,
@@ -969,7 +969,9 @@
                               </svg>`;
           }
         }));
-      });
+      };
+      if (window.Alpine) initEpPageApp();
+      else document.addEventListener('alpine:init', initEpPageApp);
     </script>
   @endpush
 
