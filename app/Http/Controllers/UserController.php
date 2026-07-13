@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\Pokja;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
@@ -57,5 +58,16 @@ class UserController extends Controller
         $user->delete();
 
         return redirect()->route('settings.users')->with('success', 'User berhasil dihapus.');
+    }
+
+    public function resetPassword($id)
+    {
+        $user = User::findOrFail($id);
+        
+        $user->update([
+            'password' => Hash::make('password')
+        ]);
+
+        return redirect()->route('settings.users')->with('success', 'Password user ' . $user->name . ' berhasil direset menjadi "password".');
     }
 }

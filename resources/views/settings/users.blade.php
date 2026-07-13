@@ -109,6 +109,11 @@
               <td class="text-center">
                 <button class="btn ghost" style="font-size:11px;padding:6px 10px"
                   onclick="editUser('{{ $u->id }}', '{{ addslashes($u->name) }}', '{{ $u->email }}', '{{ $u->pokja_id }}', '{{ $u->role }}')">Edit</button>
+                <form method="POST" action="{{ route('settings.users.reset-password', $u->id) }}" style="display:inline"
+                  onsubmit="return confirm('Reset password user {{ addslashes($u->name) }} menjadi \'password\'?')">
+                  @csrf
+                  <button class="btn ghost" style="font-size:11px;padding:6px 10px; color:#d97706;">Reset Pass</button>
+                </form>
                 @if($u->id !== auth()->id())
                   <form method="POST" action="{{ route('settings.users.destroy', $u->id) }}" style="display:inline"
                     onsubmit="return confirm('Hapus user {{ addslashes($u->name) }}?')">

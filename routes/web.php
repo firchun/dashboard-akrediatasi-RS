@@ -60,5 +60,6 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/settings/users', [UserController::class, 'store'])->name('settings.users.store');
         Route::put('/settings/users/{id}', [UserController::class, 'update'])->name('settings.users.update');
         Route::delete('/settings/users/{id}', [UserController::class, 'destroy'])->name('settings.users.destroy');
+        Route::post('/settings/users/{id}/reset-password', [UserController::class, 'resetPassword'])->name('settings.users.reset-password');
     });
 });
