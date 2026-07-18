@@ -164,16 +164,19 @@
                       <td class="py-2"><span class="text-xs text-slate-500 font-medium" x-text="reg.pic || '-'"></span></td>
                       <td class="py-2">
                         <span class="text-[11px] font-bold px-2 py-1 rounded-md" :class="{
-                                                       'bg-st-selesaibg text-st-selesai': reg.status === 'Selesai',
-                                                       'bg-st-prosesbg text-st-proses': reg.status === 'Proses',
-                                                       'bg-st-reviewbg text-st-review': reg.status === 'Review',
-                                                       'bg-st-belumbg text-st-belum': reg.status === 'Belum' || !reg.status
-                                                    }" x-text="reg.status || 'Belum'"></span>
+                                                               'bg-st-selesaibg text-st-selesai': reg.status === 'Selesai',
+                                                               'bg-st-prosesbg text-st-proses': reg.status === 'Proses',
+                                                               'bg-st-reviewbg text-st-review': reg.status === 'Review',
+                                                               'bg-st-belumbg text-st-belum': reg.status === 'Belum' || !reg.status
+                                                            }" x-text="reg.status || 'Belum'"></span>
                       </td>
                       <td class="col-dok py-2">
                         <div class="doklink">
-                          <a class="dl-icon" :class="(reg.link || (reg.upload_files && reg.upload_files.length > 0)) ? 'on' : 'cursor-not-allowed opacity-50'"
-                            :href="reg.link || null" :target="(reg.link || (reg.upload_files && reg.upload_files.length > 0)) ? '_blank' : null" rel="noopener"
+                          <a class="dl-icon"
+                            :class="(reg.link || (reg.upload_files && reg.upload_files.length > 0)) ? 'on' : 'cursor-not-allowed opacity-50'"
+                            :href="reg.link || null"
+                            :target="(reg.link || (reg.upload_files && reg.upload_files.length > 0)) ? '_blank' : null"
+                            rel="noopener"
                             :title="(reg.link || (reg.upload_files && reg.upload_files.length > 0)) ? 'Buka dokumen' : 'Belum ada dokumen'"
                             @click.prevent="(reg.link || (reg.upload_files && reg.upload_files.length > 0)) ? openPreview(reg, reg.nama || 'Pratinjau Dokumen') : null">
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -309,8 +312,15 @@
                         <span x-text="h.uploaded_by"></span>
                       </div>
                     </div>
-                    <button type="button" @click="deleteFile(h)" class="text-red-500 hover:text-red-700 p-1.5 rounded-md hover:bg-red-50 transition" title="Hapus File">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                    <button type="button" @click="deleteFile(h)"
+                      class="text-red-500 hover:text-red-700 p-1.5 rounded-md hover:bg-red-50 transition"
+                      title="Hapus File">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                        </path>
+                        <line x1="10" y1="11" x2="10" y2="17"></line>
+                        <line x1="14" y1="11" x2="14" y2="17"></line>
+                      </svg>
                     </button>
                   </div>
                 </template>
@@ -367,11 +377,12 @@
               <div
                 class="w-full px-3 py-2 border border-line rounded-lg text-[13px] bg-slate-50 text-slate-500 flex items-center justify-between">
                 <span
-                  x-text="(!regForm.pic || !regForm.link) ? 'Belum (Otomatis)' : (regForm.is_verified ? 'Selesai' : 'Proses')"></span>
-                @if(auth()->user()->role === 'verifikator' || auth()->user()->isAdmin())
+                  x-text="(!regForm.pic || (!regForm.link && (!regForm.upload_files || regForm.upload_files.length === 0))) ? 'Belum (Otomatis)' : (regForm.is_verified ? 'Selesai' : 'Proses')"></span>
+                @if(auth()->user()->role === 'verifikator' || auth()->user()->role === 'ketua_tim' || auth()->user()->role === 'regulasi' || auth()->user()->isAdmin())
                   <label class="flex items-center space-x-1 cursor-pointer"
-                    :class="(!regForm.pic || !regForm.link) ? 'opacity-50' : ''">
-                    <input type="checkbox" x-model="regForm.is_verified" :disabled="!regForm.pic || !regForm.link"
+                    :class="(!regForm.pic || (!regForm.link && (!regForm.upload_files || regForm.upload_files.length === 0))) ? 'opacity-50' : ''">
+                    <input type="checkbox" x-model="regForm.is_verified"
+                      :disabled="!regForm.pic || (!regForm.link && (!regForm.upload_files || regForm.upload_files.length === 0))"
                       class="w-4 h-4 text-teal border-line rounded focus:ring-teal cursor-pointer disabled:cursor-not-allowed"
                       title="Verifikasi">
                     <span class="text-[11px] font-bold text-teal">Verifikasi</span>
@@ -832,7 +843,7 @@
             try {
               const res = await fetch(`${window.baseUrl}/upload-document/${h.id}`, {
                 method: 'DELETE',
-                headers: { 
+                headers: {
                   'Content-Type': 'application/json',
                   'X-CSRF-TOKEN': '{{ csrf_token() }}'
                 },
@@ -840,7 +851,7 @@
               });
               const data = await res.json();
               if (!res.ok) throw new Error(data.message || 'Gagal menghapus file');
-              
+
               if (data.success) {
                 this.uploadHistory = this.uploadHistory.filter(x => x !== h);
                 this.$dispatch(this.uploadType === 'regulasi' ? 'regulasi-updated' : 'ep-updated', { code: data.pokja_code, data: data.item });
@@ -949,14 +960,14 @@
                     const rawHtml = XLSX.utils.sheet_to_html(worksheet, { header: '', footer: '' });
 
                     htmlContent += `
-                                          <div class="mb-6 bg-white p-4 rounded-lg shadow-sm border border-line-soft overflow-auto">
-                                            <h4 class="text-xs font-bold text-teal mb-3 pb-1.5 border-b border-line flex items-center gap-1.5">
-                                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                                              Sheet: ${sheetName}
-                                            </h4>
-                                            <div class="excel-table-wrapper">${rawHtml}</div>
-                                          </div>
-                                        `;
+                                                  <div class="mb-6 bg-white p-4 rounded-lg shadow-sm border border-line-soft overflow-auto">
+                                                    <h4 class="text-xs font-bold text-teal mb-3 pb-1.5 border-b border-line flex items-center gap-1.5">
+                                                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                                      Sheet: ${sheetName}
+                                                    </h4>
+                                                    <div class="excel-table-wrapper">${rawHtml}</div>
+                                                  </div>
+                                                `;
                   });
                   this.$refs.previewXlsxContainer.innerHTML = htmlContent || '<div class="text-center py-12 text-slate-400">Lembar kerja kosong.</div>';
                 } catch (err) {
