@@ -31,7 +31,8 @@ class Regulasi extends Model
 
     public function getStatusAttribute()
     {
-        $isComplete = !empty($this->pic) && !empty($this->link);
+        $hasFiles = $this->uploadFiles()->exists();
+        $isComplete = !empty($this->pic) && (!empty($this->link) || $hasFiles);
         
         if (!$isComplete) {
             return 'Belum';

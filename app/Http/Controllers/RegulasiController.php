@@ -66,8 +66,9 @@ class RegulasiController extends Controller
                 if ($checkVerified) {
                     $checkPic = $data['pic'] ?? $reg->pic;
                     $checkLink = $data['link'] ?? $reg->link;
+                    $hasFiles = $reg->uploadFiles()->exists();
 
-                    if (empty($checkPic) || empty($checkLink)) {
+                    if (empty($checkPic) || (empty($checkLink) && !$hasFiles)) {
                         return response()->json(['message' => 'Status Selesai (Verifikasi) membutuhkan dokumen dan PIC yang terisi.'], 400);
                     }
                 }
