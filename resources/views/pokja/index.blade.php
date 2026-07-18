@@ -185,7 +185,7 @@
                               <path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.5-1.5" />
                             </svg>
                           </a>
-                          <button x-show="!reg.is_verified" type="button" class="btn-upload ml-1"
+                          <button type="button" class="btn-upload ml-1"
                             @click="openUploadModal('regulasi', reg, reg.nama || 'Tanpa Nama')" title="Upload Dokumen">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                               stroke-width="2.2">
