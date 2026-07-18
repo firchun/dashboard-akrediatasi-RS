@@ -34,7 +34,7 @@ class RegulasiController extends Controller
             'is_verified' => $is_verified,
         ]);
 
-        return response()->json($reg->load('pokja'));
+        return response()->json($reg->load(['pokja', 'uploadFiles.user']));
     }
 
     public function update(Request $request, $id)
@@ -78,6 +78,8 @@ class RegulasiController extends Controller
         }
 
         $reg->update($data);
+
+        $reg->load('uploadFiles.user');
 
         return response()->json($reg);
     }
